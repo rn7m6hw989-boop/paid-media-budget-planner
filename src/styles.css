@@ -4,9 +4,9 @@
 
 :root {
   /* Type */
-  --font-sans: 'Roboto', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
-  --font-serif: 'Roboto', sans-serif; /* alias kept for compatibility */
-  --font-mono: 'Roboto Mono', ui-monospace, monospace;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+  --font-serif: 'Inter', sans-serif; /* alias kept for compatibility */
+  --font-mono: 'Inter', sans-serif; /* using Inter with tabular nums instead of a mono face */
 
   /* Color */
   --bg: #FFFFFF;
@@ -52,12 +52,12 @@
   --r-lg: 3px;
 
   /* Type scale */
-  --text-xs: 11px;
-  --text-sm: 12px;
-  --text-base: 14px;
-  --text-md: 15px;
-  --text-lg: 18px;
-  --text-xl: 22px;
+  --text-xs: 12px;
+  --text-sm: 13px;
+  --text-base: 15px;
+  --text-md: 16px;
+  --text-lg: 19px;
+  --text-xl: 24px;
   --text-2xl: 32px;
   --text-display: 48px;
 }
@@ -77,6 +77,8 @@ body {
   background: var(--bg);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: 'cv11', 'ss01', 'ss03';
+  text-rendering: optimizeLegibility;
 }
 
 button { font-family: inherit; font-size: inherit; cursor: pointer; border: none; background: none; color: inherit; }
@@ -369,7 +371,7 @@ input, select, textarea { font-family: inherit; font-size: inherit; color: inher
 
 .input.compact { padding: 5px 8px; font-size: var(--text-xs); }
 
-.input.numeric { font-family: var(--font-mono); text-align: right; }
+.input.numeric { font-family: var(--font-sans); font-variant-numeric: tabular-nums; text-align: right; }
 
 label.field {
   display: block;
@@ -468,9 +470,9 @@ input[type="range"]::-moz-range-thumb {
 .t tbody tr:hover { background: var(--surface-2); }
 
 .t .num {
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
   text-align: right;
-  font-feature-settings: "tnum";
   color: var(--ink);
 }
 
@@ -495,7 +497,7 @@ input[type="range"]::-moz-range-thumb {
 .muted { color: var(--ink-3); }
 .tiny { font-size: var(--text-xs); }
 .serif { font-family: var(--font-sans); }
-.mono { font-family: var(--font-mono); font-feature-settings: "tnum"; }
+.mono { font-family: var(--font-sans); font-feature-settings: 'tnum', 'cv11'; font-variant-numeric: tabular-nums; }
 .grow { flex: 1; }
 
 /* ==========================================================================
@@ -693,7 +695,8 @@ input[type="range"]::-moz-range-thumb {
 }
 
 .commitment-row .cm-amount {
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
   font-size: var(--text-sm);
   font-weight: 500;
   color: var(--ink);
@@ -703,7 +706,8 @@ input[type="range"]::-moz-range-thumb {
 .score-input {
   width: 42px;
   padding: 5px 4px;
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
   text-align: center;
   font-size: var(--text-xs);
   background: white;
@@ -758,7 +762,8 @@ input[type="range"]::-moz-range-thumb {
 .log-time {
   font-size: var(--text-xs);
   color: var(--ink-3);
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
 }
 
 .log-actor {
