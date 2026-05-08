@@ -14,21 +14,69 @@ export const SEED_DATA = {
     testReservePercent: 5,
   },
 
-  // Marketing objectives — set strategically by leadership
+  // Marketing objectives — Grove-style OKRs set strategically by leadership
   objectives: [
-    { id: 'obj_1', name: 'Enterprise pipeline acceleration', weight: 2.0, justification: 'H1 priority — pipeline is 22% behind target.' },
-    { id: 'obj_2', name: 'SMB customer acquisition', weight: 1.4, justification: 'Strong ROAS in SMB segment, expanding investment.' },
-    { id: 'obj_3', name: 'Brand awareness in growth markets', weight: 1.0, justification: 'Foundational investment, steady-state.' },
-    { id: 'obj_4', name: 'Product launch — Acme Cloud Pro', weight: 1.8, justification: 'Major launch in Q2, requires reach.' },
-    { id: 'obj_5', name: 'Customer expansion & retention', weight: 0.9, justification: 'Lighter spend; primarily organic and lifecycle.' },
+    {
+      id: 'obj_1',
+      name: 'Establish Acme as the leading platform for enterprise AI deployments',
+      description: 'Pipeline is 22% behind target heading into H1. Enterprise AI is our highest-margin segment and where competitors are gaining ground. Aggressive recovery year.',
+      weight: 2.0,
+      keyResults: [
+        { id: 'kr_1_1', description: 'Generate qualified pipeline in enterprise AI segment', type: 'measurable', target: 400, unit: 'M ($)', notes: 'Counted at SAL stage' },
+        { id: 'kr_1_2', description: 'Close 25 net-new enterprise AI logos', type: 'measurable', target: 25, unit: 'count', notes: '' },
+        { id: 'kr_1_3', description: 'Launch enterprise AI thought leadership program', type: 'milestone', target: null, unit: '', notes: 'CMO-led; minimum 4 owned research reports' },
+      ],
+    },
+    {
+      id: 'obj_2',
+      name: 'Accelerate SMB customer acquisition with efficient growth',
+      description: 'SMB has the strongest ROAS in our portfolio. Investment thesis: efficient acquisition fuels expansion revenue downstream.',
+      weight: 1.4,
+      keyResults: [
+        { id: 'kr_2_1', description: 'Acquire new SMB customers', type: 'measurable', target: 8000, unit: 'count', notes: '' },
+        { id: 'kr_2_2', description: 'Maintain blended SMB CAC payback period under target', type: 'measurable', target: 14, unit: 'months', notes: '' },
+        { id: 'kr_2_3', description: 'Launch self-serve onboarding flow', type: 'milestone', target: null, unit: '', notes: 'Joint with Product' },
+      ],
+    },
+    {
+      id: 'obj_3',
+      name: 'Build foundational brand presence in growth markets',
+      description: 'APAC and LATAM brand health metrics lag NAM/EMEA significantly. Without brand investment now, future demand-gen efficiency suffers.',
+      weight: 1.0,
+      keyResults: [
+        { id: 'kr_3_1', description: 'Increase aided brand awareness in APAC tier-1 markets', type: 'measurable', target: 35, unit: '%', notes: 'Baseline: 22%; measured via annual brand health study' },
+        { id: 'kr_3_2', description: 'Launch always-on brand campaigns in 4 growth markets', type: 'milestone', target: null, unit: '', notes: 'India, Brazil, Singapore, Mexico' },
+      ],
+    },
+    {
+      id: 'obj_4',
+      name: 'Successfully launch Acme Cloud Pro globally',
+      description: 'Major Q2 product launch. Cross-functional bet — marketing must drive launch awareness, demand, and brand reinforcement simultaneously.',
+      weight: 1.8,
+      keyResults: [
+        { id: 'kr_4_1', description: 'Drive Cloud Pro pipeline within 90 days of launch', type: 'measurable', target: 120, unit: 'M ($)', notes: '' },
+        { id: 'kr_4_2', description: 'Achieve launch-day awareness among target ICP', type: 'measurable', target: 40, unit: '%', notes: 'Measured via post-launch survey' },
+        { id: 'kr_4_3', description: 'Execute global launch event series', type: 'milestone', target: null, unit: '', notes: 'NAM, EMEA, APAC anchor events' },
+      ],
+    },
+    {
+      id: 'obj_5',
+      name: 'Deepen customer expansion and retention motion',
+      description: 'Net retention has slipped 4 points. Lighter paid investment, primarily lifecycle and partner co-marketing.',
+      weight: 0.9,
+      keyResults: [
+        { id: 'kr_5_1', description: 'Improve net dollar retention', type: 'measurable', target: 118, unit: '%', notes: 'Current: 114%' },
+        { id: 'kr_5_2', description: 'Launch customer advocacy program', type: 'milestone', target: null, unit: '', notes: '' },
+      ],
+    },
   ],
 
   // Business priorities — which BUs/verticals are funded
   businessPriorities: [
-    { id: 'bp_1', name: 'Enterprise SaaS', weight: 2.0, justification: '60% of revenue, highest growth focus.' },
-    { id: 'bp_2', name: 'SMB', weight: 1.3, justification: 'Strong unit economics, scale opportunity.' },
-    { id: 'bp_3', name: 'Healthcare vertical', weight: 1.5, justification: 'New vertical play, strategic priority.' },
-    { id: 'bp_4', name: 'Financial services vertical', weight: 1.0, justification: 'Mature; defending share.' },
+    { id: 'bp_1', name: 'Enterprise SaaS', weight: 2.0, description: '60% of company revenue and the primary growth engine. Highest investment priority — every other priority supports this directly or indirectly.' },
+    { id: 'bp_2', name: 'SMB', weight: 1.3, description: 'Strongest unit economics in the portfolio with proven scale potential. Funding efficient acquisition to fuel future expansion revenue.' },
+    { id: 'bp_3', name: 'Healthcare vertical', weight: 1.5, description: 'New strategic vertical play. Long sales cycles but high contract values. Marketing investment is a necessary precondition for sales pipeline.' },
+    { id: 'bp_4', name: 'Financial services vertical', weight: 1.0, description: 'Mature segment where we hold a defensible position. Investment focused on share defense and incremental expansion rather than growth.' },
   ],
 
   // Regions with both rubric scores

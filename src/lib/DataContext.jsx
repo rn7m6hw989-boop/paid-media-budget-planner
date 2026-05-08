@@ -44,12 +44,68 @@ function reducer(state, action) {
         ...state,
         objectives: [
           ...state.objectives,
-          { id: uid('obj'), name: 'New objective', weight: 1, justification: '', ...action.changes },
+          {
+            id: uid('obj'),
+            name: 'New objective',
+            description: '',
+            weight: 1,
+            keyResults: [],
+            ...action.changes,
+          },
         ],
       };
 
     case 'REMOVE_OBJECTIVE':
       return { ...state, objectives: state.objectives.filter((o) => o.id !== action.id) };
+
+    case 'ADD_KEY_RESULT': {
+      const obj = state.objectives.find((o) => o.id === action.objectiveId);
+      if (!obj) return state;
+      const krs = obj.keyResults || [];
+      // Hard cap at 5 (Grove)
+      if (krs.length >= 5) return state;
+      const newKR = {
+        id: uid('kr'),
+        description: 'New key result',
+        type: 'measurable',
+        target: null,
+        unit: '',
+        notes: '',
+        ...action.changes,
+      };
+      return {
+        ...state,
+        objectives: state.objectives.map((o) =>
+          o.id === action.objectiveId ? { ...o, keyResults: [...krs, newKR] } : o
+        ),
+      };
+    }
+
+    case 'UPDATE_KEY_RESULT':
+      return {
+        ...state,
+        objectives: state.objectives.map((o) => {
+          if (o.id !== action.objectiveId) return o;
+          return {
+            ...o,
+            keyResults: (o.keyResults || []).map((kr) =>
+              kr.id === action.krId ? { ...kr, ...action.changes } : kr
+            ),
+          };
+        }),
+      };
+
+    case 'REMOVE_KEY_RESULT':
+      return {
+        ...state,
+        objectives: state.objectives.map((o) => {
+          if (o.id !== action.objectiveId) return o;
+          return {
+            ...o,
+            keyResults: (o.keyResults || []).filter((kr) => kr.id !== action.krId),
+          };
+        }),
+      };
 
     case 'UPDATE_BUSINESS_PRIORITY':
       return {
@@ -64,7 +120,13 @@ function reducer(state, action) {
         ...state,
         businessPriorities: [
           ...state.businessPriorities,
-          { id: uid('bp'), name: 'New priority', weight: 1, justification: '', ...action.changes },
+          {
+            id: uid('bp'),
+            name: 'New priority',
+            description: '',
+            weight: 1,
+            ...action.changes,
+          },
         ],
       };
 

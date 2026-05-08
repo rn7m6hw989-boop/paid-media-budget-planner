@@ -1,44 +1,43 @@
 import React, { useState } from 'react';
 import { DataProvider } from './lib/DataContext.jsx';
 import { PoolStrip } from './components/PoolStrip.jsx';
-import { DimensionWeights } from './components/DimensionWeights.jsx';
 import { HardCommitments } from './components/HardCommitments.jsx';
 import { CampaignList } from './components/CampaignList.jsx';
 import { Breakdowns } from './components/Breakdowns.jsx';
+import { ObjectivesAndPriorities } from './components/ObjectivesAndPriorities.jsx';
 import { RegionalAnalysis } from './components/RegionalAnalysis.jsx';
 import { ChangeLog } from './components/ChangeLog.jsx';
 import { Settings } from './components/Settings.jsx';
 import { InfoPanel } from './components/UI.jsx';
 
 const TABS = [
-  { id: 'allocator', label: 'Allocator' },
+  { id: 'budget', label: 'Budget allocation' },
+  { id: 'okrs', label: 'Objectives & priorities' },
   { id: 'regional', label: 'Regional analysis' },
   { id: 'log', label: 'Change log' },
   { id: 'settings', label: 'Settings' },
 ];
 
-function Allocator() {
+function BudgetAllocation() {
   return (
     <>
       <InfoPanel storageKey="allocator">
-        <strong>The allocator</strong> divides your annual global budget across campaigns based on weighted scoring across
-        marketing objectives, business priorities, and regions. Hard commitments come off the top. Test and
-        hold-back reserves are set aside. The remaining pool is allocated to campaigns. Adjust weights on
-        the left, manage hard commitments and campaigns in the middle, and watch the breakdowns refresh
-        on the right. Rebalancing is manual — click <em>Rebalance unlocked</em> to apply weight changes.
+        <strong>Budget allocation</strong> distributes your annual global budget across campaigns
+        based on the weights set in the Objectives &amp; Priorities tab and the Regional Analysis
+        tab. Hard commitments come off the top. Test and hold-back reserves are set aside. The
+        remaining pool is allocated to campaigns. Manage hard commitments and campaigns below;
+        breakdowns on the right update live. Rebalancing is manual — click{' '}
+        <em>Rebalance unlocked</em> to apply weight changes.
       </InfoPanel>
 
       <PoolStrip />
 
-      <div className="alloc-grid">
-        <div>
-          <DimensionWeights />
-        </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '20px' }}>
         <div>
           <HardCommitments />
           <CampaignList />
         </div>
-        <div className="breakdowns-col">
+        <div>
           <Breakdowns />
         </div>
       </div>
@@ -47,7 +46,7 @@ function Allocator() {
 }
 
 export default function App() {
-  const [tab, setTab] = useState('allocator');
+  const [tab, setTab] = useState('budget');
 
   return (
     <DataProvider>
@@ -72,7 +71,8 @@ export default function App() {
         </nav>
 
         <main className="app-body">
-          {tab === 'allocator' && <Allocator />}
+          {tab === 'budget' && <BudgetAllocation />}
+          {tab === 'okrs' && <ObjectivesAndPriorities />}
           {tab === 'regional' && <RegionalAnalysis />}
           {tab === 'log' && <ChangeLog />}
           {tab === 'settings' && <Settings />}
