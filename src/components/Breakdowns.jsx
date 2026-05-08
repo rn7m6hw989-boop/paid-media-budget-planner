@@ -10,14 +10,14 @@ import {
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
 
 const CHART_COLORS = [
-  '#2D5F4A', // accent green
-  '#8B5A1F', // warm amber
-  '#2D5380', // muted blue
-  '#6B4226', // brown
-  '#7A4D6E', // mauve
-  '#3F5A4A', // dark sage
-  '#A06545', // terracotta
-  '#5D6B73', // slate
+  '#CC0000', // TI red
+  '#1A1A1A', // near-black
+  '#666666', // mid gray
+  '#999999', // light gray
+  '#A30000', // dark red
+  '#4A4A4A', // dark gray
+  '#E50914', // bright red
+  '#BDBDBD', // pale gray
 ];
 
 function ChartTile({ title, children }) {
