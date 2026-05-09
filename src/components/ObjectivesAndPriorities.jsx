@@ -348,9 +348,10 @@ function ObjectiveCard({ objective, index, onUpdate, onRemove, log }) {
 }
 
 /* ============================================================
-   Business priority card
+   Business priority card — collapsible, matching ObjectiveCard pattern
    ============================================================ */
 function BusinessPriorityCard({ priority, index, onUpdate, onRemove, log }) {
+  const [expanded, setExpanded] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   const updateWeight = (weight) => {
@@ -368,68 +369,86 @@ function BusinessPriorityCard({ priority, index, onUpdate, onRemove, log }) {
   };
 
   return (
-    <div
-      style={{
-        border: '1px solid var(--border)',
-        background: 'var(--surface)',
-        padding: '14px 16px',
-        marginBottom: '12px',
-        borderLeft: '3px solid var(--accent)',
-      }}
-    >
-      <div className="row between" style={{ marginBottom: '10px', alignItems: 'flex-start' }}>
-        <div className="row gap-md" style={{ flex: 1, alignItems: 'baseline' }}>
-          <div className="okr-number" style={{ fontSize: '16px' }}>
-            {String(index + 1).padStart(2, '0')}
-          </div>
-          <div style={{ flex: 1 }} className="editable-row">
-            <EditableInput
-              value={priority.name}
-              onChange={(v) => onUpdate({ name: v })}
-              placeholder="Priority name"
-              style={{ fontWeight: 500, fontSize: 'var(--text-base)' }}
-            />
-          </div>
+    <div className={`okr-card ${expanded ? 'expanded' : ''}`}>
+      <div
+        className="okr-summary"
+        onClick={() => setExpanded(!expanded)}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            setExpanded(!expanded);
+          }
+        }}
+      >
+        <div className="okr-number">{String(index + 1).padStart(2, '0')}</div>
+        <div className="okr-name">
+          {priority.name || (
+            <span style={{ color: 'var(--ink-4)', fontStyle: 'italic' }}>Untitled priority</span>
+          )}
         </div>
-        <button
-          className="btn icon-only ghost"
-          onClick={() => setConfirmDelete(true)}
-          aria-label="Remove"
-          title="Remove priority"
-        >
-          ×
-        </button>
-      </div>
-
-      <div className="col gap-md">
-        <div className="editable-row">
-          <label className="field">
-            Description
-            <span className="editable-hint">click to edit</span>
-          </label>
-          <EditableInput
-            value={priority.description}
-            onChange={(v) => onUpdate({ description: v })}
-            placeholder="1–2 sentences describing this priority and why it exists"
-            multiline
-          />
-        </div>
-
-        <div>
-          <div className="row between" style={{ marginBottom: '6px' }}>
-            <label className="field" style={{ marginBottom: 0 }}>Budget weight</label>
-            <span className="okr-weight-pill">{Number(priority.weight).toFixed(1)}×</span>
-          </div>
-          <input
-            type="range"
-            min={0}
-            max={3}
-            step={0.1}
-            value={priority.weight}
-            onChange={(e) => updateWeight(parseFloat(e.target.value))}
-          />
+        <div></div>
+        <div className="row gap-sm">
+          <span className="okr-weight-pill">{Number(priority.weight).toFixed(1)}×</span>
+          <span className="collapse-toggle" aria-label={expanded ? 'Collapse' : 'Expand'}>
+            <span className={`collapse-icon ${expanded ? 'open' : ''}`}>›</span>
+          </span>
         </div>
       </div>
+
+      {expanded && (
+        <div className="okr-body">
+          <div className="col gap-lg">
+            <div className="editable-row">
+              <label className="field">
+                Priority name
+                <span className="editable-hint">click to edit</span>
+              </label>
+              <EditableInput
+                value={priority.name}
+                onChange={(v) => onUpdate({ name: v })}
+                placeholder="Priority name"
+                style={{ fontWeight: 500 }}
+              />
+            </div>
+
+            <div className="editable-row">
+              <label className="field">
+                Description
+                <span className="editable-hint">click to edit</span>
+              </label>
+              <EditableInput
+                value={priority.description}
+                onChange={(v) => onUpdate({ description: v })}
+                placeholder="1–2 sentences describing this priority and why it exists"
+                multiline
+              />
+            </div>
+
+            <div>
+              <div className="row between" style={{ marginBottom: '6px' }}>
+                <label className="field" style={{ marginBottom: 0 }}>Budget weight</label>
+                <span className="okr-weight-pill">{Number(priority.weight).toFixed(1)}×</span>
+              </div>
+              <input
+                type="range"
+                min={0}
+                max={3}
+                step={0.1}
+                value={priority.weight}
+                onChange={(e) => updateWeight(parseFloat(e.target.value))}
+              />
+            </div>
+
+            <div className="row" style={{ justifyContent: 'flex-end', borderTop: '1px solid var(--border)', paddingTop: '12px' }}>
+              <button className="btn sm danger" onClick={() => setConfirmDelete(true)}>
+                Remove priority
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {confirmDelete && (
         <Modal

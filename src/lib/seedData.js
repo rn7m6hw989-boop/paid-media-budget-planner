@@ -1,7 +1,13 @@
 // Sample seed data for the budget planner.
 // Mirrors a realistic B2B SaaS marketing structure.
 
+// Schema version — bump this when the data shape changes incompatibly.
+// DataContext checks this on load and resets to seed if the user's stored data
+// has an older version (or no version at all).
+export const SCHEMA_VERSION = 2;
+
 export const SEED_DATA = {
+  schemaVersion: SCHEMA_VERSION,
   meta: {
     organization: 'Acme Corp',
     fiscalYear: 2026,
@@ -79,31 +85,31 @@ export const SEED_DATA = {
     { id: 'bp_4', name: 'Financial services vertical', weight: 1.0, description: 'Mature segment where we hold a defensible position. Investment focused on share defense and incremental expansion rather than growth.' },
   ],
 
-  // Regions with both rubric scores
+  // Regions with both rubric scores (new factor IDs)
   regions: [
     {
       id: 'reg_nam',
       name: 'NAM',
-      commercial: { tam: 5, growth: 3, revenue: 5, strategic: 4, whitespace: 2, efficiency: 4 },
-      brand: { awareness: 5, perception: 4, consideration: 4, investment: 3 },
+      commercial: { tam: 5, mix_fit: 4, revenue: 5, whitespace: 2, comp_intensity: 4 },
+      brand: { brand_preference: 4, trust: 5, owned_channel: 4 },
     },
     {
       id: 'reg_emea',
       name: 'EMEA',
-      commercial: { tam: 4, growth: 3, revenue: 3, strategic: 3, whitespace: 3, efficiency: 3 },
-      brand: { awareness: 3, perception: 3, consideration: 3, investment: 4 },
+      commercial: { tam: 4, mix_fit: 4, revenue: 3, whitespace: 3, comp_intensity: 4 },
+      brand: { brand_preference: 3, trust: 4, owned_channel: 3 },
     },
     {
       id: 'reg_apac',
       name: 'APAC',
-      commercial: { tam: 5, growth: 5, revenue: 2, strategic: 5, whitespace: 5, efficiency: 2 },
-      brand: { awareness: 2, perception: 3, consideration: 2, investment: 5 },
+      commercial: { tam: 5, mix_fit: 4, revenue: 2, whitespace: 5, comp_intensity: 3 },
+      brand: { brand_preference: 2, trust: 3, owned_channel: 2 },
     },
     {
       id: 'reg_latam',
       name: 'LATAM',
-      commercial: { tam: 3, growth: 4, revenue: 2, strategic: 2, whitespace: 4, efficiency: 3 },
-      brand: { awareness: 2, perception: 3, consideration: 2, investment: 2 },
+      commercial: { tam: 3, mix_fit: 3, revenue: 2, whitespace: 4, comp_intensity: 2 },
+      brand: { brand_preference: 2, trust: 3, owned_channel: 2 },
     },
   ],
 
@@ -111,20 +117,58 @@ export const SEED_DATA = {
   rubrics: {
     commercial: {
       factors: [
-        { id: 'tam', name: 'TAM size', weight: 20, description: 'Total addressable market in the region.' },
-        { id: 'growth', name: 'Growth rate', weight: 15, description: 'Year-over-year market growth rate.' },
-        { id: 'revenue', name: 'Revenue contribution', weight: 20, description: 'Region\'s share of company revenue.' },
-        { id: 'strategic', name: 'Strategic priority', weight: 25, description: 'Leadership-defined strategic focus.' },
-        { id: 'whitespace', name: 'Whitespace', weight: 10, description: 'Untapped opportunity, competitive gap.' },
-        { id: 'efficiency', name: 'Marketing efficiency', weight: 10, description: 'Historical cost-per-result performance.' },
+        {
+          id: 'tam',
+          name: 'TAM (3-yr forward)',
+          weight: 20,
+          description: '3-year forward total addressable market in your served categories. Anchors: 5 = >$15B; 4 = $5–15B; 3 = $1.5–5B; 2 = $500M–1.5B; 1 = <$500M.',
+        },
+        {
+          id: 'mix_fit',
+          name: 'End-market mix fit',
+          weight: 25,
+          description: 'How well the regional buyer mix matches your strategic ICP and product fit. Anchors: 5 = >70% in priority segments; 4 = 50–70%; 3 = 30–50%; 2 = 15–30%; 1 = <15%.',
+        },
+        {
+          id: 'revenue',
+          name: 'Revenue contribution',
+          weight: 20,
+          description: 'Region\'s share of company revenue. Anchors: 5 = >25%; 4 = 15–25%; 3 = 8–15%; 2 = 3–8%; 1 = <3%.',
+        },
+        {
+          id: 'whitespace',
+          name: 'Whitespace',
+          weight: 15,
+          description: 'Gap between your current share and potential share. Anchors: 5 = <10% share with strong fit; 4 = under-penetrated; 3 = moderate room; 2 = mature; 1 = saturated.',
+        },
+        {
+          id: 'comp_intensity',
+          name: 'Competitive intensity',
+          weight: 20,
+          description: 'Share-loss risk from regional incumbents and fast-followers. Anchors: 5 = active well-funded threat with structural advantage; 4 = strong competitor pressure; 3 = balanced competition; 2 = limited credible competition; 1 = effectively uncontested.',
+        },
       ],
     },
     brand: {
       factors: [
-        { id: 'awareness', name: 'Brand awareness', weight: 30, description: 'Aided/unaided brand recall in the region.' },
-        { id: 'perception', name: 'Brand perception', weight: 25, description: 'Favorability among aware audiences.' },
-        { id: 'consideration', name: 'Brand consideration', weight: 25, description: 'Likelihood to consider in next purchase.' },
-        { id: 'investment', name: 'Brand investment thesis', weight: 20, description: 'Strategic intent to build brand here.' },
+        {
+          id: 'brand_preference',
+          name: 'Brand preference',
+          weight: 40,
+          description: 'How the people who actually use or evaluate your product in this region perceive your brand vs. competitors. Consider relevant end-markets (Enterprise / SMB / vertical segments) and product categories your company sells into when scoring. Anchors: 5 = clearly preferred; 3 = competitive parity; 1 = trailing.',
+        },
+        {
+          id: 'trust',
+          name: 'Trust / reliability',
+          weight: 35,
+          description: 'Buyer perception of supply dependability, documentation accuracy, long-term availability, and post-sale support. The moat against substitution. Anchors: 5 = strong moat; 3 = adequate; 1 = at risk.',
+        },
+        {
+          id: 'owned_channel',
+          name: 'Owned-channel engagement',
+          weight: 25,
+          description: 'Activity on your owned channels — community, content engagement, evaluations, free-tier signups, technical content consumption. Leading indicator of pipeline. Anchors: 5 = highly engaged; 3 = moderate; 1 = low.',
+        },
       ],
     },
   },
@@ -218,6 +262,7 @@ export const SEED_DATA = {
 };
 
 export const EMPTY_DATA = {
+  schemaVersion: SCHEMA_VERSION,
   meta: { organization: '', fiscalYear: new Date().getFullYear(), createdAt: new Date().toISOString() },
   pool: { annualGlobalBudget: 0, holdBackPercent: 10, testReservePercent: 5 },
   objectives: [],
@@ -225,18 +270,16 @@ export const EMPTY_DATA = {
   regions: [],
   rubrics: {
     commercial: { factors: [
-      { id: 'tam', name: 'TAM size', weight: 20, description: 'Total addressable market in the region.' },
-      { id: 'growth', name: 'Growth rate', weight: 15, description: 'Year-over-year market growth rate.' },
-      { id: 'revenue', name: 'Revenue contribution', weight: 20, description: 'Region\'s share of company revenue.' },
-      { id: 'strategic', name: 'Strategic priority', weight: 25, description: 'Leadership-defined strategic focus.' },
-      { id: 'whitespace', name: 'Whitespace', weight: 10, description: 'Untapped opportunity, competitive gap.' },
-      { id: 'efficiency', name: 'Marketing efficiency', weight: 10, description: 'Historical cost-per-result performance.' },
+      { id: 'tam', name: 'TAM (3-yr forward)', weight: 20, description: '3-year forward total addressable market in your served categories. Anchors: 5 = >$15B; 4 = $5–15B; 3 = $1.5–5B; 2 = $500M–1.5B; 1 = <$500M.' },
+      { id: 'mix_fit', name: 'End-market mix fit', weight: 25, description: 'How well the regional buyer mix matches your strategic ICP and product fit. Anchors: 5 = >70% in priority segments; 4 = 50–70%; 3 = 30–50%; 2 = 15–30%; 1 = <15%.' },
+      { id: 'revenue', name: 'Revenue contribution', weight: 20, description: 'Region\'s share of company revenue. Anchors: 5 = >25%; 4 = 15–25%; 3 = 8–15%; 2 = 3–8%; 1 = <3%.' },
+      { id: 'whitespace', name: 'Whitespace', weight: 15, description: 'Gap between your current share and potential share. Anchors: 5 = <10% share with strong fit; 4 = under-penetrated; 3 = moderate room; 2 = mature; 1 = saturated.' },
+      { id: 'comp_intensity', name: 'Competitive intensity', weight: 20, description: 'Share-loss risk from regional incumbents and fast-followers. Anchors: 5 = active well-funded threat with structural advantage; 4 = strong competitor pressure; 3 = balanced competition; 2 = limited credible competition; 1 = effectively uncontested.' },
     ] },
     brand: { factors: [
-      { id: 'awareness', name: 'Brand awareness', weight: 30, description: 'Aided/unaided brand recall in the region.' },
-      { id: 'perception', name: 'Brand perception', weight: 25, description: 'Favorability among aware audiences.' },
-      { id: 'consideration', name: 'Brand consideration', weight: 25, description: 'Likelihood to consider in next purchase.' },
-      { id: 'investment', name: 'Brand investment thesis', weight: 20, description: 'Strategic intent to build brand here.' },
+      { id: 'brand_preference', name: 'Brand preference', weight: 40, description: 'How the people who actually use or evaluate your product in this region perceive your brand vs. competitors. Consider relevant end-markets (Enterprise / SMB / vertical segments) and product categories your company sells into when scoring.' },
+      { id: 'trust', name: 'Trust / reliability', weight: 35, description: 'Buyer perception of supply dependability, documentation accuracy, long-term availability, and post-sale support.' },
+      { id: 'owned_channel', name: 'Owned-channel engagement', weight: 25, description: 'Activity on your owned channels — community, content engagement, evaluations, free-tier signups, technical content consumption.' },
     ] },
   },
   hardCommitments: [],

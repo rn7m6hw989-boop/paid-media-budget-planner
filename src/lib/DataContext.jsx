@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useReducer, useCallback } from 'react';
-import { SEED_DATA, EMPTY_DATA } from '../lib/seedData.js';
+import { SEED_DATA, EMPTY_DATA, SCHEMA_VERSION } from '../lib/seedData.js';
 import { uid } from '../lib/calculations.js';
 
 const STORAGE_KEY = 'paid-media-budget-planner-v1';
@@ -8,7 +8,16 @@ const DataContext = createContext(null);
 function loadFromStorage() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
+    if (!raw) return SEED_DATA;
+    const parsed = JSON.parse(raw);
+    // Schema version check — if the stored data uses an older schema,
+    // reset to seed. This is a clean migration: simpler than mapping old
+    // factor IDs to new ones and risking inconsistent state.
+    if (parsed.schemaVersion !== SCHEMA_VERSION) {
+      console.info('Schema version changed — resetting to seed data.');
+      return SEED_DATA;
+    }
+    return parsed;
   } catch (err) {
     console.warn('Failed to load from storage', err);
   }
@@ -17,7 +26,8 @@ function loadFromStorage() {
 
 function saveToStorage(data) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    // Always stamp the current schema version on save
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...data, schemaVersion: SCHEMA_VERSION }));
   } catch (err) {
     console.warn('Failed to save to storage', err);
   }

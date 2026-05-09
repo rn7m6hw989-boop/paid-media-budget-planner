@@ -432,6 +432,12 @@ input[type="range"]::-moz-range-thumb {
 .tag.danger { background: var(--accent-soft); color: var(--accent); }
 .tag.info { background: var(--ink); color: white; }
 .tag.accent { background: var(--accent); color: white; }
+.tag.success { background: var(--success-soft); color: var(--success-ink); }
+/* Strategic label variants — Defend/Grow/Build/Maintain — distinct from generic "warn" usage */
+.tag.label-defend { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.tag.label-grow { background: var(--success-soft); color: var(--success-ink); font-weight: 600; }
+.tag.label-build { background: #FFF4E0; color: #8C5A00; font-weight: 600; }
+.tag.label-maintain { background: var(--surface-3); color: var(--ink-2); font-weight: 600; }
 
 .tag-dot {
   width: 8px;
