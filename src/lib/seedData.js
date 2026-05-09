@@ -4,7 +4,7 @@
 // Schema version — bump this when the data shape changes incompatibly.
 // DataContext checks this on load and resets to seed if the user's stored data
 // has an older version (or no version at all).
-export const SCHEMA_VERSION = 3;
+export const SCHEMA_VERSION = 4;
 
 export const SEED_DATA = {
   schemaVersion: SCHEMA_VERSION,
@@ -18,15 +18,19 @@ export const SEED_DATA = {
     annualGlobalBudget: 20000000,
     holdBackPercent: 12.5,
     testReservePercent: 5,
+    // Brand/demand ratio (Binet & Field default). Sums to 100.
+    brandDemandRatio: { brand: 55, demand: 45 },
   },
 
   // Marketing objectives — Grove-style OKRs set strategically by leadership
+  // Weights are percentages summing to 100. They represent each objective's
+  // share of strategic priority, and feed both regional analysis and campaign math.
   objectives: [
     {
       id: 'obj_1',
       name: 'Establish Acme as the leading platform for enterprise AI deployments',
       description: 'Pipeline is 22% behind target heading into H1. Enterprise AI is our highest-margin segment and where competitors are gaining ground. Aggressive recovery year.',
-      weight: 2.0,
+      weight: 28,
       keyResults: [
         { id: 'kr_1_1', description: 'Generate qualified pipeline in enterprise AI segment', type: 'measurable', target: 400, unit: 'M ($)', notes: 'Counted at SAL stage' },
         { id: 'kr_1_2', description: 'Close 25 net-new enterprise AI logos', type: 'measurable', target: 25, unit: 'count', notes: '' },
@@ -37,7 +41,7 @@ export const SEED_DATA = {
       id: 'obj_2',
       name: 'Accelerate SMB customer acquisition with efficient growth',
       description: 'SMB has the strongest ROAS in our portfolio. Investment thesis: efficient acquisition fuels expansion revenue downstream.',
-      weight: 1.4,
+      weight: 20,
       keyResults: [
         { id: 'kr_2_1', description: 'Acquire new SMB customers', type: 'measurable', target: 8000, unit: 'count', notes: '' },
         { id: 'kr_2_2', description: 'Maintain blended SMB CAC payback period under target', type: 'measurable', target: 14, unit: 'months', notes: '' },
@@ -47,29 +51,29 @@ export const SEED_DATA = {
     {
       id: 'obj_3',
       name: 'Build foundational brand presence in growth markets',
-      description: 'APAC and LATAM brand health metrics lag NAM/EMEA significantly. Without brand investment now, future demand-gen efficiency suffers.',
-      weight: 1.0,
+      description: 'India, Rest of Asia, and Rest of World brand health metrics lag US and EMEA significantly. Without brand investment now, future demand-gen efficiency suffers.',
+      weight: 14,
       keyResults: [
-        { id: 'kr_3_1', description: 'Increase aided brand awareness in APAC tier-1 markets', type: 'measurable', target: 35, unit: '%', notes: 'Baseline: 22%; measured via annual brand health study' },
-        { id: 'kr_3_2', description: 'Launch always-on brand campaigns in 4 growth markets', type: 'milestone', target: null, unit: '', notes: 'India, Brazil, Singapore, Mexico' },
+        { id: 'kr_3_1', description: 'Increase aided brand awareness in priority growth markets', type: 'measurable', target: 35, unit: '%', notes: 'Baseline: 22%; measured via annual brand health study' },
+        { id: 'kr_3_2', description: 'Launch always-on brand campaigns in 4 growth markets', type: 'milestone', target: null, unit: '', notes: 'India and Rest of Asia anchors' },
       ],
     },
     {
       id: 'obj_4',
       name: 'Successfully launch Acme Cloud Pro globally',
       description: 'Major Q2 product launch. Cross-functional bet — marketing must drive launch awareness, demand, and brand reinforcement simultaneously.',
-      weight: 1.8,
+      weight: 25,
       keyResults: [
         { id: 'kr_4_1', description: 'Drive Cloud Pro pipeline within 90 days of launch', type: 'measurable', target: 120, unit: 'M ($)', notes: '' },
         { id: 'kr_4_2', description: 'Achieve launch-day awareness among target ICP', type: 'measurable', target: 40, unit: '%', notes: 'Measured via post-launch survey' },
-        { id: 'kr_4_3', description: 'Execute global launch event series', type: 'milestone', target: null, unit: '', notes: 'NAM, EMEA, APAC anchor events' },
+        { id: 'kr_4_3', description: 'Execute global launch event series', type: 'milestone', target: null, unit: '', notes: 'US, EMEA, China anchor events' },
       ],
     },
     {
       id: 'obj_5',
       name: 'Deepen customer expansion and retention motion',
       description: 'Net retention has slipped 4 points. Lighter paid investment, primarily lifecycle and partner co-marketing.',
-      weight: 0.9,
+      weight: 13,
       keyResults: [
         { id: 'kr_5_1', description: 'Improve net dollar retention', type: 'measurable', target: 118, unit: '%', notes: 'Current: 114%' },
         { id: 'kr_5_2', description: 'Launch customer advocacy program', type: 'milestone', target: null, unit: '', notes: '' },
@@ -78,11 +82,12 @@ export const SEED_DATA = {
   ],
 
   // Business priorities — which BUs/verticals are funded
+  // Weights are percentages summing to 100.
   businessPriorities: [
-    { id: 'bp_1', name: 'Enterprise SaaS', weight: 2.0, description: '60% of company revenue and the primary growth engine. Highest investment priority — every other priority supports this directly or indirectly.' },
-    { id: 'bp_2', name: 'SMB', weight: 1.3, description: 'Strongest unit economics in the portfolio with proven scale potential. Funding efficient acquisition to fuel future expansion revenue.' },
-    { id: 'bp_3', name: 'Healthcare vertical', weight: 1.5, description: 'New strategic vertical play. Long sales cycles but high contract values. Marketing investment is a necessary precondition for sales pipeline.' },
-    { id: 'bp_4', name: 'Financial services vertical', weight: 1.0, description: 'Mature segment where we hold a defensible position. Investment focused on share defense and incremental expansion rather than growth.' },
+    { id: 'bp_1', name: 'Enterprise SaaS', weight: 35, description: '60% of company revenue and the primary growth engine. Highest investment priority — every other priority supports this directly or indirectly.' },
+    { id: 'bp_2', name: 'SMB', weight: 22, description: 'Strongest unit economics in the portfolio with proven scale potential. Funding efficient acquisition to fuel future expansion revenue.' },
+    { id: 'bp_3', name: 'Healthcare vertical', weight: 26, description: 'New strategic vertical play. Long sales cycles but high contract values. Marketing investment is a necessary precondition for sales pipeline.' },
+    { id: 'bp_4', name: 'Financial services vertical', weight: 17, description: 'Mature segment where we hold a defensible position. Investment focused on share defense and incremental expansion rather than growth.' },
   ],
 
   // Regions with both rubric scores
@@ -255,7 +260,9 @@ export const SEED_DATA = {
     },
   },
 
-  // Hard commitments — always locked, line-itemed
+  // Hard commitments — always locked, line-itemed.
+  // Come off the top of the annual budget BEFORE regional envelopes are calculated.
+  // The pool tag here is descriptive (used in reporting/breakdowns), not structural.
   hardCommitments: [
     {
       id: 'hc_1',
@@ -264,6 +271,7 @@ export const SEED_DATA = {
       objectiveId: 'obj_3',
       businessPriorityId: 'bp_1',
       regionId: 'reg_emea',
+      pool: 'brand',
       note: 'Signed contract, June 2026. Brand presence at flagship industry event.',
     },
     {
@@ -273,6 +281,7 @@ export const SEED_DATA = {
       objectiveId: 'obj_1',
       businessPriorityId: 'bp_1',
       regionId: 'reg_us',
+      pool: 'brand',
       note: '12-month editorial + display program. Renewed Jan 2026.',
     },
     {
@@ -282,25 +291,43 @@ export const SEED_DATA = {
       objectiveId: 'obj_4',
       businessPriorityId: 'bp_1',
       regionId: 'reg_china',
+      pool: 'brand',
       note: 'CEO directive — Acme Cloud Pro launch event in Shanghai.',
     },
   ],
 
-  // Campaigns — discretionary allocations
+  // Campaigns — discretionary allocations.
+  // Each campaign must be tagged with a pool (brand or demand) — campaigns can
+  // only draw from their tagged pool within their region's envelope.
   campaigns: [
-    { id: 'cmp_1', name: 'Always-on demand-gen — US', objectiveId: 'obj_1', businessPriorityId: 'bp_1', regionId: 'reg_us', locked: false, manualAdjustment: null },
-    { id: 'cmp_2', name: 'Always-on demand-gen — EMEA', objectiveId: 'obj_1', businessPriorityId: 'bp_1', regionId: 'reg_emea', locked: false, manualAdjustment: null },
-    { id: 'cmp_3', name: 'China enterprise pipeline push', objectiveId: 'obj_1', businessPriorityId: 'bp_1', regionId: 'reg_china', locked: false, manualAdjustment: null },
-    { id: 'cmp_4', name: 'SMB acquisition — US', objectiveId: 'obj_2', businessPriorityId: 'bp_2', regionId: 'reg_us', locked: false, manualAdjustment: null },
-    { id: 'cmp_5', name: 'SMB acquisition — Rest of World', objectiveId: 'obj_2', businessPriorityId: 'bp_2', regionId: 'reg_row', locked: false, manualAdjustment: null },
-    { id: 'cmp_6', name: 'Brand awareness — India growth', objectiveId: 'obj_3', businessPriorityId: 'bp_1', regionId: 'reg_india', locked: true, manualAdjustment: 1650000 },
-    { id: 'cmp_7', name: 'Brand awareness — EMEA', objectiveId: 'obj_3', businessPriorityId: 'bp_1', regionId: 'reg_emea', locked: false, manualAdjustment: null },
-    { id: 'cmp_8', name: 'Cloud Pro launch — global digital', objectiveId: 'obj_4', businessPriorityId: 'bp_1', regionId: 'reg_us', locked: false, manualAdjustment: null },
-    { id: 'cmp_9', name: 'Cloud Pro launch — EMEA paid social', objectiveId: 'obj_4', businessPriorityId: 'bp_1', regionId: 'reg_emea', locked: false, manualAdjustment: null },
-    { id: 'cmp_10', name: 'Healthcare vertical campaign — US', objectiveId: 'obj_1', businessPriorityId: 'bp_3', regionId: 'reg_us', locked: false, manualAdjustment: null },
-    { id: 'cmp_11', name: 'FinServ retention — US', objectiveId: 'obj_5', businessPriorityId: 'bp_4', regionId: 'reg_us', locked: false, manualAdjustment: null },
-    { id: 'cmp_12', name: 'Customer expansion — Japan', objectiveId: 'obj_5', businessPriorityId: 'bp_1', regionId: 'reg_japan', locked: false, manualAdjustment: null },
-    { id: 'cmp_13', name: 'Brand build — Rest of Asia', objectiveId: 'obj_3', businessPriorityId: 'bp_1', regionId: 'reg_roa', locked: false, manualAdjustment: null },
+    // US — demand-heavy market, both pools
+    { id: 'cmp_1', name: 'Always-on demand-gen — US', objectiveId: 'obj_1', businessPriorityId: 'bp_1', regionId: 'reg_us', pool: 'demand', locked: false, manualAdjustment: null },
+    { id: 'cmp_4', name: 'SMB acquisition — US', objectiveId: 'obj_2', businessPriorityId: 'bp_2', regionId: 'reg_us', pool: 'demand', locked: false, manualAdjustment: null },
+    { id: 'cmp_8', name: 'Cloud Pro launch — US digital', objectiveId: 'obj_4', businessPriorityId: 'bp_1', regionId: 'reg_us', pool: 'brand', locked: false, manualAdjustment: null },
+    { id: 'cmp_10', name: 'Healthcare vertical campaign — US', objectiveId: 'obj_1', businessPriorityId: 'bp_3', regionId: 'reg_us', pool: 'demand', locked: false, manualAdjustment: null },
+    { id: 'cmp_11', name: 'FinServ retention — US', objectiveId: 'obj_5', businessPriorityId: 'bp_4', regionId: 'reg_us', pool: 'demand', locked: false, manualAdjustment: null },
+    { id: 'cmp_14', name: 'US thought leadership program', objectiveId: 'obj_1', businessPriorityId: 'bp_1', regionId: 'reg_us', pool: 'brand', locked: false, manualAdjustment: null },
+
+    // EMEA — both pools
+    { id: 'cmp_2', name: 'Always-on demand-gen — EMEA', objectiveId: 'obj_1', businessPriorityId: 'bp_1', regionId: 'reg_emea', pool: 'demand', locked: false, manualAdjustment: null },
+    { id: 'cmp_7', name: 'Brand awareness — EMEA', objectiveId: 'obj_3', businessPriorityId: 'bp_1', regionId: 'reg_emea', pool: 'brand', locked: false, manualAdjustment: null },
+    { id: 'cmp_9', name: 'Cloud Pro launch — EMEA paid social', objectiveId: 'obj_4', businessPriorityId: 'bp_1', regionId: 'reg_emea', pool: 'demand', locked: false, manualAdjustment: null },
+
+    // China — both pools, defensive posture
+    { id: 'cmp_3', name: 'China enterprise pipeline push', objectiveId: 'obj_1', businessPriorityId: 'bp_1', regionId: 'reg_china', pool: 'demand', locked: false, manualAdjustment: null },
+    { id: 'cmp_15', name: 'China brand defense', objectiveId: 'obj_3', businessPriorityId: 'bp_1', regionId: 'reg_china', pool: 'brand', locked: false, manualAdjustment: null },
+
+    // Japan — brand-led (low whitespace, defensive posture)
+    { id: 'cmp_12', name: 'Customer expansion — Japan', objectiveId: 'obj_5', businessPriorityId: 'bp_1', regionId: 'reg_japan', pool: 'brand', locked: false, manualAdjustment: null },
+
+    // India — brand build (high whitespace growth market)
+    { id: 'cmp_6', name: 'Brand awareness — India growth', objectiveId: 'obj_3', businessPriorityId: 'bp_1', regionId: 'reg_india', pool: 'brand', locked: false, manualAdjustment: null },
+
+    // Rest of Asia — brand build
+    { id: 'cmp_13', name: 'Brand build — Rest of Asia', objectiveId: 'obj_3', businessPriorityId: 'bp_1', regionId: 'reg_roa', pool: 'brand', locked: false, manualAdjustment: null },
+
+    // Rest of World — opportunistic SMB acquisition
+    { id: 'cmp_5', name: 'SMB acquisition — Rest of World', objectiveId: 'obj_2', businessPriorityId: 'bp_2', regionId: 'reg_row', pool: 'demand', locked: false, manualAdjustment: null },
   ],
 
   // Change log — initialized with a few historical entries
@@ -344,27 +371,19 @@ export const SEED_DATA = {
   },
 };
 
+// EMPTY_DATA is the default state for first-time users. Empty arrays for everything
+// the user defines (objectives, priorities, regions, campaigns, hard commitments),
+// but the rubric framework (factor names, descriptions, anchors) is inherited from
+// SEED_DATA so the scoring guide works out of the box.
 export const EMPTY_DATA = {
   schemaVersion: SCHEMA_VERSION,
   meta: { organization: '', fiscalYear: new Date().getFullYear(), createdAt: new Date().toISOString() },
-  pool: { annualGlobalBudget: 0, holdBackPercent: 10, testReservePercent: 5 },
+  pool: { annualGlobalBudget: 0, holdBackPercent: 10, testReservePercent: 5, brandDemandRatio: { brand: 55, demand: 45 } },
   objectives: [],
   businessPriorities: [],
   regions: [],
-  rubrics: {
-    commercial: { factors: [
-      { id: 'tam', name: 'TAM (3-yr forward)', weight: 20, description: '3-year forward total addressable market in your served categories.', anchors: [], note: '' },
-      { id: 'mix_fit', name: 'End-market mix fit', weight: 25, description: 'Share of regional TAM concentrated in your strategic priority end-markets, products, or customer segments.', anchors: [], note: '' },
-      { id: 'revenue', name: 'Revenue contribution', weight: 20, description: 'Region\'s share of company global revenue.', anchors: [], note: '' },
-      { id: 'whitespace', name: 'Whitespace', weight: 15, description: 'Gap between your current regional share and your potential share.', anchors: [], note: '' },
-      { id: 'comp_intensity', name: 'Competitive intensity', weight: 20, description: 'Share-loss risk from regional incumbents and fast-followers.', anchors: [], note: '' },
-    ] },
-    brand: { factors: [
-      { id: 'brand_preference', name: 'Brand preference', weight: 40, description: 'How buyers and evaluators in this region perceive your brand vs. competitors.', anchors: [], note: '' },
-      { id: 'trust', name: 'Trust / reliability', weight: 35, description: 'Buyer perception of supply dependability, documentation accuracy, longevity, and support quality.', anchors: [], note: '' },
-      { id: 'owned_channel', name: 'Owned-channel engagement', weight: 25, description: 'Active engagement with your owned ecosystem in the region.', anchors: [], note: '' },
-    ] },
-  },
+  // Inherit full rubric definitions (with anchors) from SEED_DATA
+  rubrics: SEED_DATA.rubrics,
   hardCommitments: [],
   campaigns: [],
   changeLog: [],

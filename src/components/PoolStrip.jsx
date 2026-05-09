@@ -80,11 +80,13 @@ export function PoolStrip() {
 
         <div className="pool-cell">
           <div className="pool-label">
-            Campaigns
-            <HelpIcon definition={DEFINITIONS.campaigns.short} />
+            Discretionary pool
+            <HelpIcon definition="The remaining budget after hard commitments and reserves are taken off the top. This pool is split across regional envelopes based on regional weights, and each envelope splits into brand and demand pools by the org-level brand/demand ratio." />
           </div>
           <div className="pool-value small">{formatCurrencyFull(pool.campaignsPool)}</div>
-          <div className="pool-meta">{allocatedPct} of budget allocated total</div>
+          <div className="pool-meta">
+            Split {pool.brandPct}/{pool.demandPct} brand/demand across regions
+          </div>
         </div>
       </div>
 

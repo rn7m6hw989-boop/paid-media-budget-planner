@@ -10,6 +10,39 @@ const PRIORITIES_HARD_CAP = 10;
 const KR_HARD_CAP = 5; // Grove discipline
 
 /* ============================================================
+   SumValidator — visible sum-check banner. Shown when items exist.
+   Green when sum=100, red otherwise.
+   ============================================================ */
+function SumValidator({ total, label = 'Total' }) {
+  const ok = total === 100;
+  const off = total - 100;
+  return (
+    <div
+      style={{
+        background: ok ? 'var(--success-soft)' : 'var(--accent-soft)',
+        border: `1px solid ${ok ? 'transparent' : 'var(--accent)'}`,
+        borderLeft: `3px solid ${ok ? 'var(--success)' : 'var(--accent)'}`,
+        padding: '8px 12px',
+        marginBottom: '12px',
+        fontSize: 'var(--text-sm)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: '12px',
+      }}
+    >
+      <span style={{ color: ok ? 'var(--success-ink)' : 'var(--accent-ink)' }}>
+        {ok ? (
+          <>{label}: <strong>100%</strong> — sums correctly.</>
+        ) : (
+          <>{label} sums to <strong>{total}%</strong>. {off > 0 ? `${off}% over` : `${Math.abs(off)}% under`}.</>
+        )}
+      </span>
+    </div>
+  );
+}
+
+/* ============================================================
    Inline editable text — directly bound to props/dispatch.
    No local state, no save buffer. Every keystroke saves.
    ============================================================ */
@@ -153,7 +186,7 @@ function ObjectiveCard({ objective, index, onUpdate, onRemove, log }) {
         type: 'weight',
         target: objective.id,
         targetName: `Objective: ${objective.name}`,
-        summary: `Weight: ${Number(old).toFixed(1)}× → ${Number(weight).toFixed(1)}×`,
+        summary: `Weight: ${Number(old) || 0}% → ${Number(weight) || 0}%`,
         rationale: '',
       });
     }
@@ -206,7 +239,7 @@ function ObjectiveCard({ objective, index, onUpdate, onRemove, log }) {
           {krs.length} KR{krs.length === 1 ? '' : 's'}
         </div>
         <div className="row gap-sm">
-          <span className="okr-weight-pill">{Number(objective.weight).toFixed(1)}×</span>
+          <span className="okr-weight-pill">{Number(objective.weight) || 0}%</span>
           <span className="collapse-toggle" aria-label={expanded ? 'Collapse' : 'Expand'}>
             <span className={`collapse-icon ${expanded ? 'open' : ''}`}>›</span>
           </span>
@@ -245,18 +278,20 @@ function ObjectiveCard({ objective, index, onUpdate, onRemove, log }) {
             <div>
               <div className="row between" style={{ marginBottom: '6px' }}>
                 <label className="field" style={{ marginBottom: 0 }}>
-                  Budget weight
-                  <HelpIcon definition={DEFINITIONS.weight.short} />
+                  Strategic weight (%)
+                  <HelpIcon definition="Each objective's share of strategic priority. All objectives' weights must sum to 100%. Combined with business priority weight to drive campaign budget within each pool." />
                 </label>
-                <span className="okr-weight-pill">{Number(objective.weight).toFixed(1)}×</span>
+                <span className="okr-weight-pill">{Number(objective.weight) || 0}%</span>
               </div>
               <input
-                type="range"
+                type="number"
+                className="input numeric"
                 min={0}
-                max={3}
-                step={0.1}
+                max={100}
+                step={1}
                 value={objective.weight}
-                onChange={(e) => updateWeight(parseFloat(e.target.value))}
+                onChange={(e) => updateWeight(Number(e.target.value) || 0)}
+                style={{ maxWidth: '120px' }}
               />
             </div>
 
@@ -362,7 +397,7 @@ function BusinessPriorityCard({ priority, index, onUpdate, onRemove, log }) {
         type: 'weight',
         target: priority.id,
         targetName: `Business priority: ${priority.name}`,
-        summary: `Weight: ${Number(old).toFixed(1)}× → ${Number(weight).toFixed(1)}×`,
+        summary: `Weight: ${Number(old) || 0}% → ${Number(weight) || 0}%`,
         rationale: '',
       });
     }
@@ -390,7 +425,7 @@ function BusinessPriorityCard({ priority, index, onUpdate, onRemove, log }) {
         </div>
         <div></div>
         <div className="row gap-sm">
-          <span className="okr-weight-pill">{Number(priority.weight).toFixed(1)}×</span>
+          <span className="okr-weight-pill">{Number(priority.weight) || 0}%</span>
           <span className="collapse-toggle" aria-label={expanded ? 'Collapse' : 'Expand'}>
             <span className={`collapse-icon ${expanded ? 'open' : ''}`}>›</span>
           </span>
@@ -428,16 +463,18 @@ function BusinessPriorityCard({ priority, index, onUpdate, onRemove, log }) {
 
             <div>
               <div className="row between" style={{ marginBottom: '6px' }}>
-                <label className="field" style={{ marginBottom: 0 }}>Budget weight</label>
-                <span className="okr-weight-pill">{Number(priority.weight).toFixed(1)}×</span>
+                <label className="field" style={{ marginBottom: 0 }}>Strategic weight (%)</label>
+                <span className="okr-weight-pill">{Number(priority.weight) || 0}%</span>
               </div>
               <input
-                type="range"
+                type="number"
+                className="input numeric"
                 min={0}
-                max={3}
-                step={0.1}
+                max={100}
+                step={1}
                 value={priority.weight}
-                onChange={(e) => updateWeight(parseFloat(e.target.value))}
+                onChange={(e) => updateWeight(Number(e.target.value) || 0)}
+                style={{ maxWidth: '120px' }}
               />
             </div>
 
@@ -585,6 +622,13 @@ export function ObjectivesAndPriorities() {
             </div>
           )}
 
+          {objectives.length > 0 && (
+            <SumValidator
+              total={objectives.reduce((s, o) => s + (Number(o.weight) || 0), 0)}
+              label="Strategic weight"
+            />
+          )}
+
           {objectives.length === 0 ? (
             <div className="muted tiny" style={{ padding: '20px', textAlign: 'center', border: '1px dashed var(--border)' }}>
               No objectives yet. Click "Add objective" to begin.
@@ -622,6 +666,13 @@ export function ObjectivesAndPriorities() {
               + Add priority
             </button>
           </div>
+
+          {priorities.length > 0 && (
+            <SumValidator
+              total={priorities.reduce((s, p) => s + (Number(p.weight) || 0), 0)}
+              label="Strategic weight"
+            />
+          )}
 
           {priorities.length === 0 ? (
             <div className="muted tiny" style={{ padding: '20px', textAlign: 'center', border: '1px dashed var(--border)' }}>

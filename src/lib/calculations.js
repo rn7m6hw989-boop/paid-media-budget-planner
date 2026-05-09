@@ -49,9 +49,56 @@ export function computeRegionalWeights(regions, rubrics) {
 }
 
 /**
+ * Compute each region's *share* of the total budget (sums to 1.0).
+ * Uses the commercial composite score as the basis, then normalizes
+ * so all regional shares sum to exactly 1.0.
+ *
+ * This is what feeds into the regional envelope calculation.
+ *
+ * Returns: { regionId: shareOfTotal }   // values sum to 1.0
+ */
+export function computeRegionalShares(regions, rubrics) {
+  if (!regions || regions.length === 0) return {};
+
+  const factors = rubrics.commercial.factors;
+  const totalImportance = factors.reduce((s, f) => s + Number(f.weight), 0) || 1;
+
+  // Compute composite scores
+  const scores = {};
+  for (const r of regions) {
+    const region = r.commercial || {};
+    let composite = 0;
+    for (const f of factors) {
+      const score = Number(region[f.id]) || 0;
+      composite += score * (f.weight / totalImportance);
+    }
+    scores[r.id] = composite;
+  }
+
+  // Normalize to shares summing to 1.0
+  const totalScore = Object.values(scores).reduce((s, v) => s + v, 0);
+  const shares = {};
+  for (const id in scores) {
+    shares[id] = totalScore > 0 ? scores[id] / totalScore : 1 / regions.length;
+  }
+  return shares;
+}
+
+/**
  * Compute the budget pool breakdown.
- * Returns:
- *   annualGlobalBudget, hardCommitmentsTotal, testReserve, holdBackReserve, campaignsPool
+ *
+ * New model (envelope-based):
+ *   annualGlobalBudget
+ *   - hardCommitmentsTotal (locked, off the top)
+ *   - testReserve (% of annual, off the top)
+ *   - holdBackReserve (% of annual, off the top)
+ *   = discretionaryPool — gets sliced into regional envelopes
+ *
+ * Each region's envelope = discretionaryPool × regionalShare
+ * Each envelope splits into brand pool + demand pool by the org-level brand/demand ratio.
+ *
+ * Returns the same top-level keys as before (for backward compatibility) PLUS
+ * the per-region envelope breakdown.
  */
 export function computePoolBreakdown(data) {
   const annualGlobalBudget = Number(data.pool.annualGlobalBudget) || 0;
@@ -61,74 +108,160 @@ export function computePoolBreakdown(data) {
   );
   const testReserve = Math.round(annualGlobalBudget * (data.pool.testReservePercent / 100));
   const holdBackReserve = Math.round(annualGlobalBudget * (data.pool.holdBackPercent / 100));
-  const campaignsPool = Math.max(
+  const discretionaryPool = Math.max(
     0,
     annualGlobalBudget - hardCommitmentsTotal - testReserve - holdBackReserve
   );
+
+  // Brand/demand ratio (default 55/45 if missing)
+  const brandPct = Number(data.pool.brandDemandRatio?.brand) || 55;
+  const demandPct = 100 - brandPct;
+
+  // Regional shares (sum to 1.0). If regions/rubrics are missing, fall back to equal share.
+  const shares = data.regions && data.rubrics
+    ? computeRegionalShares(data.regions, data.rubrics)
+    : {};
+
+  // Build envelope per region
+  const envelopes = {};
+  let assignedTotal = 0;
+  const regionList = data.regions || [];
+  for (const r of regionList) {
+    const share = shares[r.id] ?? 0;
+    const envelope = Math.round(discretionaryPool * share);
+    const brandPool = Math.round(envelope * (brandPct / 100));
+    const demandPool = envelope - brandPool; // ensures sum equals envelope exactly
+    envelopes[r.id] = {
+      regionId: r.id,
+      regionName: r.name,
+      share,
+      envelope,
+      brandPool,
+      demandPool,
+    };
+    assignedTotal += envelope;
+  }
 
   return {
     annualGlobalBudget,
     hardCommitmentsTotal,
     testReserve,
     holdBackReserve,
-    campaignsPool,
+    discretionaryPool,
+    // Backward-compatible alias for code that still references `campaignsPool`
+    campaignsPool: discretionaryPool,
+    brandPct,
+    demandPct,
+    envelopes,
+    // Diagnostic — should be ~= discretionaryPool, off by at most a few cents from rounding
+    envelopesAssignedTotal: assignedTotal,
   };
 }
 
 /**
- * Compute a campaign's raw weighted score.
- * Multiplicative across the three dimensions.
+ * Compute a campaign's combined weight inside its pool.
+ *
+ * In the envelope model, the regional dimension is already factored in
+ * via the envelope (campaigns can only draw from their region's pool),
+ * so the campaign-level combined weight is just priority × objective.
+ *
+ * Both priority and objective weights are now percentages summing to 100.
+ * They get treated as fractions (0–1) here.
  */
-export function computeCampaignScore(campaign, data, regionalWeights) {
+export function computeCampaignCombinedWeight(campaign, data) {
   const obj = data.objectives.find((o) => o.id === campaign.objectiveId);
   const bp = data.businessPriorities.find((b) => b.id === campaign.businessPriorityId);
-  const regWeight = regionalWeights[campaign.regionId]?.commercial ?? 1;
 
-  const objWeight = obj ? Number(obj.weight) || 0 : 0;
-  const bpWeight = bp ? Number(bp.weight) || 0 : 0;
+  const objWeight = obj ? (Number(obj.weight) || 0) / 100 : 0;
+  const bpWeight = bp ? (Number(bp.weight) || 0) / 100 : 0;
 
-  return objWeight * bpWeight * regWeight;
+  return objWeight * bpWeight;
 }
 
 /**
- * Compute model-recommended allocation for each campaign.
- * Locked campaigns retain their current value (manualAdjustment).
- * Unlocked campaigns share the remaining pool by their weighted scores.
+ * Compute model-recommended allocation for each campaign using the envelope model.
  *
- * Returns: { campaignId: { recommended: number, current: number, score: number } }
+ * Process:
+ *   1. Determine the pool breakdown (annual budget → envelopes → brand/demand pools)
+ *   2. Group campaigns by (regionId, pool)
+ *   3. Within each bucket:
+ *      a. Locked campaigns retain their current value
+ *      b. Remaining budget in the bucket is normalized across unlocked campaigns
+ *         by their combined weight (priority × objective)
+ *   4. Money never crosses bucket boundaries.
+ *
+ * Returns: { campaignId: { recommended, current, weight, isLocked, bucketId } }
  */
-export function computeAllocations(data, regionalWeights) {
+export function computeAllocations(data) {
   const pool = computePoolBreakdown(data);
   const result = {};
 
-  // Step 1: locked campaigns hold their current value
-  let lockedTotal = 0;
+  // Group campaigns by (regionId, pool)
+  // Pool is 'brand' or 'demand'; campaigns missing pool tag default to 'demand'
+  const buckets = {};
   for (const c of data.campaigns) {
-    if (c.locked) {
-      const current = c.manualAdjustment ?? 0;
-      lockedTotal += current;
-      result[c.id] = { recommended: current, current, score: 0, isLocked: true };
+    const poolTag = c.pool || 'demand';
+    const bucketId = `${c.regionId}::${poolTag}`;
+    if (!buckets[bucketId]) {
+      buckets[bucketId] = {
+        regionId: c.regionId,
+        pool: poolTag,
+        campaigns: [],
+      };
     }
+    buckets[bucketId].campaigns.push(c);
   }
 
-  // Step 2: unlocked pool = campaignsPool - locked
-  const unlockedPool = Math.max(0, pool.campaignsPool - lockedTotal);
+  // For each bucket, compute allocations
+  for (const bucketId in buckets) {
+    const { regionId, pool: poolTag, campaigns } = buckets[bucketId];
+    const envelope = pool.envelopes[regionId];
+    const bucketSize = envelope ? envelope[`${poolTag}Pool`] : 0;
 
-  // Step 3: compute scores for unlocked campaigns
-  const unlocked = data.campaigns.filter((c) => !c.locked);
-  let totalScore = 0;
-  const scores = {};
-  for (const c of unlocked) {
-    const s = computeCampaignScore(c, data, regionalWeights);
-    scores[c.id] = s;
-    totalScore += s;
-  }
+    // Locked campaigns hold their current value
+    let lockedTotal = 0;
+    const unlocked = [];
+    for (const c of campaigns) {
+      if (c.locked) {
+        const current = c.manualAdjustment ?? 0;
+        lockedTotal += current;
+        result[c.id] = {
+          recommended: current,
+          current,
+          weight: 0,
+          isLocked: true,
+          bucketId,
+        };
+      } else {
+        unlocked.push(c);
+      }
+    }
 
-  // Step 4: assign weighted allocations
-  for (const c of unlocked) {
-    const recommended = totalScore > 0 ? Math.round((scores[c.id] / totalScore) * unlockedPool) : 0;
-    const current = c.manualAdjustment ?? recommended;
-    result[c.id] = { recommended, current, score: scores[c.id], isLocked: false };
+    // Available budget for unlocked campaigns
+    const availableForUnlocked = Math.max(0, bucketSize - lockedTotal);
+
+    // Compute combined weights for unlocked campaigns
+    let totalWeight = 0;
+    const weights = {};
+    for (const c of unlocked) {
+      const w = computeCampaignCombinedWeight(c, data);
+      weights[c.id] = w;
+      totalWeight += w;
+    }
+
+    // Normalize: each unlocked campaign gets (weight / totalWeight) × availableBudget
+    for (const c of unlocked) {
+      const recommended =
+        totalWeight > 0 ? Math.round((weights[c.id] / totalWeight) * availableForUnlocked) : 0;
+      const current = c.manualAdjustment ?? recommended;
+      result[c.id] = {
+        recommended,
+        current,
+        weight: weights[c.id],
+        isLocked: false,
+        bucketId,
+      };
+    }
   }
 
   return result;
@@ -137,11 +270,14 @@ export function computeAllocations(data, regionalWeights) {
 /**
  * Compute breakdowns by dimension for visualization.
  * If includeHardCommitments = true, hard commitments are added to their tagged dimensions.
+ *
+ * Returns: { byObjective, byBusinessPriority, byRegion, byPool }
  */
 export function computeBreakdowns(data, allocations, includeHardCommitments = true) {
   const byObjective = {};
   const byBusinessPriority = {};
   const byRegion = {};
+  const byPool = { brand: { id: 'brand', name: 'Brand', value: 0 }, demand: { id: 'demand', name: 'Demand', value: 0 } };
 
   // Initialize all known buckets
   for (const o of data.objectives) byObjective[o.id] = { id: o.id, name: o.name, value: 0 };
@@ -156,6 +292,8 @@ export function computeBreakdowns(data, allocations, includeHardCommitments = tr
     if (byBusinessPriority[c.businessPriorityId])
       byBusinessPriority[c.businessPriorityId].value += amt;
     if (byRegion[c.regionId]) byRegion[c.regionId].value += amt;
+    const poolKey = c.pool || 'demand';
+    if (byPool[poolKey]) byPool[poolKey].value += amt;
   }
 
   // Add hard commitments
@@ -166,6 +304,8 @@ export function computeBreakdowns(data, allocations, includeHardCommitments = tr
       if (byBusinessPriority[hc.businessPriorityId])
         byBusinessPriority[hc.businessPriorityId].value += amt;
       if (byRegion[hc.regionId]) byRegion[hc.regionId].value += amt;
+      const poolKey = hc.pool || 'brand'; // hard commitments default to brand if untagged
+      if (byPool[poolKey]) byPool[poolKey].value += amt;
     }
   }
 
@@ -173,6 +313,7 @@ export function computeBreakdowns(data, allocations, includeHardCommitments = tr
     byObjective: Object.values(byObjective),
     byBusinessPriority: Object.values(byBusinessPriority),
     byRegion: Object.values(byRegion),
+    byPool: Object.values(byPool),
   };
 }
 

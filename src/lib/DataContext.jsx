@@ -8,20 +8,20 @@ const DataContext = createContext(null);
 function loadFromStorage() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return SEED_DATA;
+    if (!raw) return EMPTY_DATA;
     const parsed = JSON.parse(raw);
     // Schema version check — if the stored data uses an older schema,
-    // reset to seed. This is a clean migration: simpler than mapping old
-    // factor IDs to new ones and risking inconsistent state.
+    // reset to empty. Users can load sample data from Settings if they want
+    // to see a populated example.
     if (parsed.schemaVersion !== SCHEMA_VERSION) {
-      console.info('Schema version changed — resetting to seed data.');
-      return SEED_DATA;
+      console.info('Schema version changed — resetting to empty.');
+      return EMPTY_DATA;
     }
     return parsed;
   } catch (err) {
     console.warn('Failed to load from storage', err);
   }
-  return SEED_DATA;
+  return EMPTY_DATA;
 }
 
 function saveToStorage(data) {

@@ -21,18 +21,18 @@ const TABS = [
 function BudgetAllocation() {
   return (
     <>
-      <InfoPanel storageKey="allocator">
-        <strong>Budget allocation</strong> distributes your annual global budget across campaigns
-        based on the weights set in the Objectives &amp; Priorities tab and the Regional Analysis
-        tab. Hard commitments come off the top. Test and hold-back reserves are set aside. The
-        remaining pool is allocated to campaigns. Manage hard commitments and campaigns below;
-        breakdowns on the right update live. Rebalancing is manual — click{' '}
-        <em>Rebalance unlocked</em> to apply weight changes.
+      <InfoPanel storageKey="allocator-v2">
+        <strong>Budget allocation</strong> applies the envelope model: hard commitments and reserves come
+        off the top first, then the discretionary pool is split into regional envelopes (by regional
+        weights from Regional Analysis), and each envelope splits into brand and demand pools (by the
+        org-level ratio in Settings). Campaigns are normalized within their (region × pool) bucket
+        based on objective × priority weights. Money cannot cross regional or pool boundaries — each
+        bucket is fixed once strategic inputs are set.
       </InfoPanel>
 
       <PoolStrip />
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '20px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '20px', alignItems: 'flex-start' }}>
         <div>
           <HardCommitments />
           <CampaignList />

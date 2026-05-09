@@ -4,7 +4,7 @@ import { DEFINITIONS } from '../lib/definitions.js';
 import { Modal, InfoPanel } from './UI.jsx';
 
 export function Settings() {
-  const { data, dispatch, resetToSeed, resetToEmpty, replaceAll } = useData();
+  const { data, dispatch, resetToSeed, resetToEmpty, replaceAll, log } = useData();
   const fileRef = useRef(null);
   const [confirmReset, setConfirmReset] = useState(null);
 
@@ -43,6 +43,27 @@ export function Settings() {
     dispatch({ type: 'UPDATE_POOL', changes: { [key]: Number(value) } });
   };
 
+  // Brand/demand ratio is stored as a {brand, demand} object summing to 100.
+  // The user only edits brand%; demand% is the complement.
+  const updateBrandDemandRatio = (brandValue) => {
+    const brand = Math.max(0, Math.min(100, Number(brandValue) || 0));
+    const demand = 100 - brand;
+    const oldRatio = data.pool.brandDemandRatio || { brand: 55, demand: 45 };
+    dispatch({
+      type: 'UPDATE_POOL',
+      changes: { brandDemandRatio: { brand, demand } },
+    });
+    if (oldRatio.brand !== brand) {
+      log({
+        type: 'pool',
+        target: 'brandDemandRatio',
+        targetName: 'Brand/demand ratio',
+        summary: `Ratio: ${oldRatio.brand}/${oldRatio.demand} → ${brand}/${demand}`,
+        rationale: '',
+      });
+    }
+  };
+
   return (
     <>
       <InfoPanel storageKey="settings">
@@ -54,9 +75,14 @@ export function Settings() {
       <div className="section-card">
         <div className="section-header">
           <div className="section-title">Pool reserves</div>
+          <div className="section-subtitle">
+            Hold-back and test reserves come off the top of the annual budget before regional envelopes are
+            calculated. The brand/demand ratio splits each regional envelope into two pools — campaigns can
+            only draw from their tagged pool.
+          </div>
         </div>
         <div className="section-body">
-          <div className="row gap-md">
+          <div className="row gap-md" style={{ marginBottom: '20px' }}>
             <div style={{ flex: 1 }}>
               <label className="field">Hold-back reserve (%)</label>
               <input
@@ -86,6 +112,41 @@ export function Settings() {
               <div className="tiny muted" style={{ marginTop: '4px' }}>
                 Budget reserved for experiments and learning agendas.
               </div>
+            </div>
+          </div>
+
+          <div style={{ borderTop: '1px solid var(--border)', paddingTop: '20px' }}>
+            <div className="row gap-md" style={{ alignItems: 'flex-end' }}>
+              <div style={{ flex: 1 }}>
+                <label className="field">Brand allocation (%)</label>
+                <input
+                  type="number"
+                  className="input numeric"
+                  value={data.pool.brandDemandRatio?.brand ?? 55}
+                  onChange={(e) => updateBrandDemandRatio(e.target.value)}
+                  min={0}
+                  max={100}
+                  step={1}
+                />
+              </div>
+              <div style={{ flex: 1 }}>
+                <label className="field">Demand allocation (%)</label>
+                <input
+                  type="number"
+                  className="input numeric"
+                  value={100 - (data.pool.brandDemandRatio?.brand ?? 55)}
+                  disabled
+                  style={{ background: 'var(--surface-2)', color: 'var(--ink-3)', cursor: 'not-allowed' }}
+                />
+                <div className="tiny muted" style={{ marginTop: '4px' }}>
+                  Auto-calculated as the complement of brand allocation.
+                </div>
+              </div>
+            </div>
+            <div className="tiny muted" style={{ marginTop: '8px', lineHeight: 1.6 }}>
+              Sets the brand/demand split applied to every regional envelope. Default 55/45 follows
+              Binet &amp; Field's research on long-term marketing effectiveness. Set once
+              organizationally and reviewed annually — not adjusted at the regional or campaign level.
             </div>
           </div>
         </div>
@@ -142,7 +203,7 @@ export function Settings() {
               style={{ display: 'none' }}
               onChange={importData}
             />
-            <button className="btn" onClick={() => setConfirmReset('seed')}>↻ Reset to sample data</button>
+            <button className="btn" onClick={() => setConfirmReset('seed')}>↻ Load sample data</button>
             <button className="btn danger" onClick={() => setConfirmReset('empty')}>⌫ Clear all data</button>
           </div>
           <div className="tiny muted" style={{ marginTop: '10px', lineHeight: 1.6 }}>
@@ -172,7 +233,7 @@ export function Settings() {
 
       {confirmReset && (
         <Modal
-          title={confirmReset === 'seed' ? 'Reset to sample data?' : 'Clear all data?'}
+          title={confirmReset === 'seed' ? 'Load sample data?' : 'Clear all data?'}
           onClose={() => setConfirmReset(null)}
           footer={
             <>
@@ -185,14 +246,14 @@ export function Settings() {
                   setConfirmReset(null);
                 }}
               >
-                {confirmReset === 'seed' ? 'Reset to sample' : 'Clear everything'}
+                {confirmReset === 'seed' ? 'Load sample' : 'Clear everything'}
               </button>
             </>
           }
         >
           <p style={{ fontSize: '13px', color: 'var(--ink-2)', lineHeight: 1.6 }}>
             {confirmReset === 'seed'
-              ? 'This will replace your current plan with the sample dataset. Your existing changes will be lost.'
+              ? 'This will replace your current plan with a populated sample dataset showing realistic objectives, priorities, regions, and campaigns. Useful for seeing how a fully built plan looks. Your existing changes will be lost.'
               : 'This will permanently remove all campaigns, commitments, regions, objectives, and change log entries.'}
             {' '}This cannot be undone. Export first if you want to keep a copy.
           </p>

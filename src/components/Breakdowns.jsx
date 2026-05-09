@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useData } from '../lib/DataContext.jsx';
 import {
-  computeRegionalWeights,
   computeAllocations,
   computeBreakdowns,
   formatCurrency,
@@ -33,14 +32,7 @@ export function Breakdowns() {
   const { data } = useData();
   const [includeHardCommits, setIncludeHardCommits] = useState(true);
 
-  const regionalWeights = useMemo(
-    () => computeRegionalWeights(data.regions, data.rubrics),
-    [data.regions, data.rubrics]
-  );
-  const allocations = useMemo(
-    () => computeAllocations(data, regionalWeights),
-    [data, regionalWeights]
-  );
+  const allocations = useMemo(() => computeAllocations(data), [data]);
   const breakdowns = useMemo(
     () => computeBreakdowns(data, allocations, includeHardCommits),
     [data, allocations, includeHardCommits]
@@ -107,6 +99,32 @@ export function Breakdowns() {
               </div>
             ))}
           </div>
+        </ChartTile>
+
+        <ChartTile title="By pool">
+          {breakdowns.byPool && breakdowns.byPool.some((p) => p.value > 0) ? (
+            <div className="col gap-sm">
+              {breakdowns.byPool.map((p, i) => {
+                const pct = total > 0 ? (p.value / total) * 100 : 0;
+                const color = p.id === 'brand' ? '#CC0000' : '#666666';
+                return (
+                  <div key={p.id}>
+                    <div className="row between tiny" style={{ marginBottom: '3px' }}>
+                      <span>{p.name}</span>
+                      <span className="mono">
+                        {formatCurrency(p.value)} · {pct.toFixed(0)}%
+                      </span>
+                    </div>
+                    <div style={{ height: 5, background: 'var(--surface-3)', borderRadius: 3 }}>
+                      <div style={{ width: `${pct}%`, height: '100%', background: color, borderRadius: 3 }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="tiny muted">No allocations yet.</div>
+          )}
         </ChartTile>
 
         <ChartTile title="By marketing objective">
