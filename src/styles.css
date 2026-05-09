@@ -825,6 +825,16 @@ input[type="range"]::-moz-range-thumb {
   transition: all 0.12s;
   cursor: text;
   padding: 6px 10px;
+  /* Fill the parent so textareas and inputs match the form column width */
+  width: 100%;
+  box-sizing: border-box;
+  /* Inherit the page's typography rather than the browser textarea default */
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  line-height: 1.5;
+  /* Textareas should not be horizontally resizable — only vertically if needed */
+  resize: vertical;
 }
 
 .editable-text:hover {
