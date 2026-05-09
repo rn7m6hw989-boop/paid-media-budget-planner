@@ -5,7 +5,229 @@ import {
   computeStrategicLabel,
   LABEL_META,
 } from '../lib/calculations.js';
-import { HelpIcon, InfoPanel, Tag } from './UI.jsx';
+import { InfoPanel, Tag } from './UI.jsx';
+
+/* ============================================================
+   FactorPopover — rich popover showing scoring anchors on hover
+   Replaces the simple HelpIcon for factor names in this tab.
+   ============================================================ */
+function FactorPopover({ factor, children }) {
+  const [show, setShow] = useState(false);
+  return (
+    <span
+      className="factor-trigger"
+      onMouseEnter={() => setShow(true)}
+      onMouseLeave={() => setShow(false)}
+      onFocus={() => setShow(true)}
+      onBlur={() => setShow(false)}
+      tabIndex={0}
+    >
+      {children || factor.name}
+      {show && (
+        <span className="anchor-popover" role="tooltip">
+          <div className="anchor-popover-title">{factor.name}</div>
+          <div className="anchor-popover-desc">{factor.description}</div>
+          {factor.anchors && factor.anchors.length > 0 ? (
+            <>
+              {[...factor.anchors]
+                .sort((a, b) => b.score - a.score)
+                .map((a) => (
+                  <div key={a.score} className="anchor-row">
+                    <span className="anchor-score">{a.score}</span>
+                    <span className="anchor-def">{a.definition}</span>
+                  </div>
+                ))}
+            </>
+          ) : null}
+          {factor.note ? (
+            <div className="anchor-popover-note">{factor.note}</div>
+          ) : null}
+        </span>
+      )}
+    </span>
+  );
+}
+
+/* ============================================================
+   ScoringGuideExpandable — full scoring rubric reference at top
+   ============================================================ */
+function ScoringGuideExpandable() {
+  const { data } = useData();
+  const [open, setOpen] = useState(false);
+
+  const renderRubric = (rubricKey, rubricLabel) => {
+    const factors = data.rubrics[rubricKey].factors;
+    return (
+      <div style={{ marginBottom: '20px' }}>
+        <h4
+          style={{
+            fontSize: 'var(--text-md)',
+            fontWeight: 500,
+            color: 'var(--ink)',
+            marginBottom: '12px',
+            paddingBottom: '6px',
+            borderBottom: '1px solid var(--border)',
+          }}
+        >
+          {rubricLabel} rubric
+        </h4>
+        {factors.map((f) => (
+          <div key={f.id} style={{ marginBottom: '18px' }}>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'baseline',
+                gap: '10px',
+                marginBottom: '4px',
+              }}
+            >
+              <span
+                style={{
+                  fontSize: 'var(--text-base)',
+                  fontWeight: 500,
+                  color: 'var(--ink)',
+                }}
+              >
+                {f.name}
+              </span>
+              <span
+                style={{
+                  fontSize: 'var(--text-xs)',
+                  color: 'var(--ink-3)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.06em',
+                  fontWeight: 500,
+                }}
+              >
+                {f.weight}% importance
+              </span>
+            </div>
+            <div
+              style={{
+                fontSize: 'var(--text-sm)',
+                color: 'var(--ink-3)',
+                marginBottom: '10px',
+                lineHeight: 1.6,
+              }}
+            >
+              {f.description}
+            </div>
+            {f.anchors && f.anchors.length > 0 && (
+              <div
+                style={{
+                  background: 'var(--surface-2)',
+                  padding: '10px 14px',
+                  borderRadius: 'var(--r-sm)',
+                }}
+              >
+                {[...f.anchors]
+                  .sort((a, b) => b.score - a.score)
+                  .map((a) => (
+                    <div
+                      key={a.score}
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: '24px 1fr',
+                        gap: '12px',
+                        padding: '6px 0',
+                        borderTop: '1px solid var(--border)',
+                        fontSize: 'var(--text-xs)',
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontVariantNumeric: 'tabular-nums',
+                          fontSize: 14,
+                          fontWeight: 600,
+                          color: 'var(--accent)',
+                          textAlign: 'center',
+                        }}
+                      >
+                        {a.score}
+                      </span>
+                      <span style={{ color: 'var(--ink-2)', lineHeight: 1.6 }}>
+                        {a.definition}
+                      </span>
+                    </div>
+                  ))}
+              </div>
+            )}
+            {f.note && (
+              <div
+                style={{
+                  fontSize: 'var(--text-xs)',
+                  color: 'var(--ink-3)',
+                  fontStyle: 'italic',
+                  marginTop: '8px',
+                  lineHeight: 1.6,
+                }}
+              >
+                {f.note}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  return (
+    <div className="section-card" style={{ marginBottom: '16px' }}>
+      <button
+        onClick={() => setOpen(!open)}
+        style={{
+          width: '100%',
+          padding: '12px 18px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          background: 'transparent',
+          border: 'none',
+          textAlign: 'left',
+          cursor: 'pointer',
+          fontFamily: 'inherit',
+          fontSize: 'var(--text-sm)',
+        }}
+      >
+        <span style={{ color: 'var(--ink-3)' }}>
+          Scoring guide — full 1–5 anchor definitions for every factor
+        </span>
+        <span
+          style={{
+            display: 'inline-block',
+            transition: 'transform 0.15s',
+            transform: open ? 'rotate(90deg)' : 'rotate(0deg)',
+            color: 'var(--ink-3)',
+          }}
+        >
+          ›
+        </span>
+      </button>
+
+      {open && (
+        <div
+          style={{
+            padding: '18px',
+            borderTop: '1px solid var(--border)',
+            fontSize: 'var(--text-sm)',
+          }}
+        >
+          <div
+            className="tiny muted"
+            style={{ marginBottom: '14px', lineHeight: 1.6 }}
+          >
+            Use these definitions when scoring regions. You can also hover any factor name in the
+            tables below to see the anchors inline. Calibrate to your business — the exact dollar
+            thresholds and segment definitions should match how your company already segments
+            markets.
+          </div>
+          {renderRubric('commercial', 'Commercial')}
+          {renderRubric('brand', 'Brand')}
+        </div>
+      )}
+    </div>
+  );
+}
 
 /* ============================================================
    Factor importance row
@@ -43,12 +265,12 @@ function FactorImportanceRow({ rubricKey, rubricLabel }) {
         </div>
       </div>
       <div className="section-body">
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '16px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px' }}>
           {factors.map((f) => (
             <div key={f.id}>
               <div className="row between" style={{ marginBottom: '6px' }}>
-                <span className="tiny" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                  {f.name} <HelpIcon definition={f.description} />
+                <span className="tiny">
+                  <FactorPopover factor={f} />
                 </span>
                 <span className="mono tiny" style={{ fontWeight: 500 }}>{f.weight}%</span>
               </div>
@@ -119,16 +341,17 @@ function ScoringMatrix({ rubricKey, rubricLabel, weightKey, showLabel = false })
         </div>
       </div>
       <div className="section-body dense">
-        <div style={{ overflowX: 'auto' }}>
-          <table className="t">
-            <thead>
+        <table className="t">
+          <thead>
               <tr>
                 <th>Region</th>
                 {factors.map((f) => (
                   <th key={f.id} className="center">
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                      {f.name} <HelpIcon definition={f.description} />
-                    </span>
+                    <FactorPopover factor={f}>
+                      <span style={{ textTransform: 'uppercase', letterSpacing: '0.08em', fontSize: '10px' }}>
+                        {f.name}
+                      </span>
+                    </FactorPopover>
                   </th>
                 ))}
                 <th className="num">Score</th>
@@ -172,7 +395,6 @@ function ScoringMatrix({ rubricKey, rubricLabel, weightKey, showLabel = false })
               })}
             </tbody>
           </table>
-        </div>
       </div>
     </div>
   );
@@ -381,6 +603,7 @@ export function RegionalAnalysis() {
         brand rubric is captured for future use.</span>
       </InfoPanel>
 
+      <ScoringGuideExpandable />
       <LabelLogicExpandable />
 
       <h3
