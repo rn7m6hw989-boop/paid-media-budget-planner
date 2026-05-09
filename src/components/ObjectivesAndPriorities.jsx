@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useData } from '../lib/DataContext.jsx';
 import { HelpIcon, InfoPanel, Modal } from './UI.jsx';
 import { DEFINITIONS } from '../lib/definitions.js';
@@ -10,121 +10,140 @@ const PRIORITIES_HARD_CAP = 10;
 const KR_HARD_CAP = 5; // Grove discipline
 
 /* ============================================================
-   Key Result row
+   Inline editable text — directly bound to props/dispatch.
+   No local state, no save buffer. Every keystroke saves.
    ============================================================ */
-function KeyResultRow({ objectiveId, kr, onUpdate, onRemove }) {
-  const [draft, setDraft] = useState(kr);
+function EditableInput({ value, onChange, placeholder, className = '', style = {}, multiline = false, ...props }) {
+  if (multiline) {
+    return (
+      <textarea
+        value={value || ''}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className={`editable-text ${className}`}
+        style={{ resize: 'vertical', minHeight: '50px', width: '100%', ...style }}
+        rows={2}
+        {...props}
+      />
+    );
+  }
+  return (
+    <input
+      type="text"
+      value={value || ''}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={placeholder}
+      className={`editable-text ${className}`}
+      style={{ width: '100%', ...style }}
+      {...props}
+    />
+  );
+}
 
-  const commit = (changes) => {
-    setDraft({ ...draft, ...changes });
-    onUpdate(changes);
-  };
-
+/* ============================================================
+   Key Result row — directly bound, no local state
+   ============================================================ */
+function KeyResultRow({ kr, onUpdate, onRemove }) {
   return (
     <div
       style={{
         border: '1px solid var(--border)',
-        background: 'var(--surface-2)',
-        padding: '12px 14px',
+        background: 'white',
+        padding: '12px',
         marginBottom: '8px',
-        display: 'grid',
-        gridTemplateColumns: '1fr auto',
-        gap: '12px',
       }}
     >
-      <div className="col gap-md" style={{ flex: 1 }}>
-        <div>
+      <div className="row between" style={{ alignItems: 'flex-start', marginBottom: '8px' }}>
+        <div style={{ flex: 1 }}>
           <label className="field">Description</label>
-          <input
-            type="text"
-            className="input"
-            value={draft.description || ''}
-            onChange={(e) => commit({ description: e.target.value })}
+          <EditableInput
+            value={kr.description}
+            onChange={(v) => onUpdate({ description: v })}
             placeholder="e.g., Generate $400M in qualified pipeline"
           />
         </div>
-
-        <div className="row gap-md" style={{ alignItems: 'flex-end' }}>
-          <div style={{ flexShrink: 0 }}>
-            <label className="field">Type</label>
-            <div className="row gap-sm">
-              <button
-                type="button"
-                className={`btn sm ${draft.type === 'milestone' ? 'primary' : ''}`}
-                onClick={() => commit({ type: 'milestone', target: null, unit: '' })}
-              >
-                Milestone
-              </button>
-              <button
-                type="button"
-                className={`btn sm ${draft.type === 'measurable' ? 'primary' : ''}`}
-                onClick={() => commit({ type: 'measurable' })}
-              >
-                Measurable
-              </button>
-            </div>
-          </div>
-
-          {draft.type === 'measurable' && (
-            <>
-              <div style={{ width: '120px' }}>
-                <label className="field">Target</label>
-                <input
-                  type="number"
-                  className="input numeric"
-                  value={draft.target ?? ''}
-                  onChange={(e) =>
-                    commit({ target: e.target.value === '' ? null : Number(e.target.value) })
-                  }
-                  step={1}
-                />
-              </div>
-              <div style={{ width: '120px' }}>
-                <label className="field">Unit</label>
-                <input
-                  type="text"
-                  className="input"
-                  value={draft.unit || ''}
-                  onChange={(e) => commit({ unit: e.target.value })}
-                  placeholder="$, %, count"
-                />
-              </div>
-            </>
-          )}
-        </div>
-
-        <div>
-          <label className="field">Notes (optional)</label>
-          <input
-            type="text"
-            className="input"
-            value={draft.notes || ''}
-            onChange={(e) => commit({ notes: e.target.value })}
-            placeholder="Owner, baseline, caveats"
-          />
-        </div>
+        <button
+          className="btn icon-only ghost"
+          onClick={onRemove}
+          title="Remove key result"
+          aria-label="Remove key result"
+          style={{ marginLeft: '8px', marginTop: '20px' }}
+        >
+          ×
+        </button>
       </div>
 
-      <button className="btn icon-only ghost" onClick={onRemove} title="Remove key result" aria-label="Remove">
-        ×
-      </button>
+      <div className="row gap-md" style={{ alignItems: 'flex-end', marginBottom: '8px', flexWrap: 'wrap' }}>
+        <div style={{ flexShrink: 0 }}>
+          <label className="field">Type</label>
+          <div className="row gap-sm">
+            <button
+              type="button"
+              className={`btn sm ${kr.type === 'milestone' ? 'primary' : ''}`}
+              onClick={() => onUpdate({ type: 'milestone', target: null, unit: '' })}
+            >
+              Milestone
+            </button>
+            <button
+              type="button"
+              className={`btn sm ${kr.type === 'measurable' ? 'primary' : ''}`}
+              onClick={() => onUpdate({ type: 'measurable' })}
+            >
+              Measurable
+            </button>
+          </div>
+        </div>
+
+        {kr.type === 'measurable' && (
+          <>
+            <div style={{ width: '100px' }}>
+              <label className="field">Target</label>
+              <input
+                type="number"
+                className="input numeric"
+                value={kr.target ?? ''}
+                onChange={(e) =>
+                  onUpdate({ target: e.target.value === '' ? null : Number(e.target.value) })
+                }
+                step={1}
+              />
+            </div>
+            <div style={{ width: '100px' }}>
+              <label className="field">Unit</label>
+              <input
+                type="text"
+                className="input"
+                value={kr.unit || ''}
+                onChange={(e) => onUpdate({ unit: e.target.value })}
+                placeholder="$, %, count"
+              />
+            </div>
+          </>
+        )}
+      </div>
+
+      <div>
+        <label className="field">Notes (optional)</label>
+        <EditableInput
+          value={kr.notes}
+          onChange={(v) => onUpdate({ notes: v })}
+          placeholder="Owner, baseline, caveats"
+        />
+      </div>
     </div>
   );
 }
 
 /* ============================================================
-   Objective card
+   Objective card — collapsible, with hover-visible affordances
    ============================================================ */
 function ObjectiveCard({ objective, index, onUpdate, onRemove, log }) {
   const { dispatch } = useData();
+  const [expanded, setExpanded] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   const krs = objective.keyResults || [];
   const krCapReached = krs.length >= KR_HARD_CAP;
-
-  const updateField = (changes) => {
-    onUpdate(changes);
-  };
 
   const updateWeight = (weight) => {
     const old = objective.weight;
@@ -168,130 +187,133 @@ function ObjectiveCard({ objective, index, onUpdate, onRemove, log }) {
   };
 
   return (
-    <div className="section-card" style={{ marginBottom: '20px' }}>
-      <div className="section-header">
-        <div className="row gap-md" style={{ flex: 1 }}>
-          <div
-            style={{
-              fontFamily: 'var(--font-sans)',
-              fontVariantNumeric: 'tabular-nums',
-              fontSize: '24px',
-              fontWeight: 300,
-              color: 'var(--accent)',
-              letterSpacing: '-0.02em',
-              minWidth: '32px',
-            }}
-          >
-            {String(index + 1).padStart(2, '0')}
-          </div>
-          <div style={{ flex: 1 }}>
-            <input
-              type="text"
-              value={objective.name}
-              onChange={(e) => updateField({ name: e.target.value })}
-              className="input"
-              style={{
-                fontWeight: 500,
-                fontSize: '15px',
-                border: 'none',
-                background: 'transparent',
-                padding: '4px 0',
-              }}
-              placeholder="Objective name"
-            />
-          </div>
+    <div className={`okr-card ${expanded ? 'expanded' : ''}`}>
+      <div
+        className="okr-summary"
+        onClick={() => setExpanded(!expanded)}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            setExpanded(!expanded);
+          }
+        }}
+      >
+        <div className="okr-number">{String(index + 1).padStart(2, '0')}</div>
+        <div className="okr-name">{objective.name || <span style={{ color: 'var(--ink-4)', fontStyle: 'italic' }}>Untitled objective</span>}</div>
+        <div className="okr-kr-count">
+          {krs.length} KR{krs.length === 1 ? '' : 's'}
         </div>
-        <button className="btn sm danger" onClick={() => setConfirmDelete(true)}>
-          Remove
-        </button>
+        <div className="row gap-sm">
+          <span className="okr-weight-pill">{Number(objective.weight).toFixed(1)}×</span>
+          <span className="collapse-toggle" aria-label={expanded ? 'Collapse' : 'Expand'}>
+            <span className={`collapse-icon ${expanded ? 'open' : ''}`}>›</span>
+          </span>
+        </div>
       </div>
 
-      <div className="section-body">
-        <div className="col gap-lg">
-          <div>
-            <label className="field">Strategic context</label>
-            <textarea
-              className="textarea"
-              value={objective.description || ''}
-              onChange={(e) => updateField({ description: e.target.value })}
-              placeholder="1–2 sentences explaining why this objective matters this year"
-              rows={2}
-              style={{ resize: 'vertical', minHeight: '50px' }}
-            />
-          </div>
-
-          <div>
-            <div className="row between" style={{ marginBottom: '6px' }}>
-              <label className="field" style={{ marginBottom: 0 }}>
-                Budget weight
-                <HelpIcon definition={DEFINITIONS.weight.short} />
+      {expanded && (
+        <div className="okr-body">
+          <div className="col gap-lg">
+            <div className="editable-row">
+              <label className="field">
+                Objective name
+                <span className="editable-hint">click to edit</span>
               </label>
-              <span
-                className="mono"
-                style={{ fontSize: '13px', fontWeight: 500, color: 'var(--accent)' }}
-              >
-                {Number(objective.weight).toFixed(1)}×
-              </span>
+              <EditableInput
+                value={objective.name}
+                onChange={(v) => onUpdate({ name: v })}
+                placeholder="What do you want to achieve?"
+                style={{ fontWeight: 500 }}
+              />
             </div>
-            <input
-              type="range"
-              min={0}
-              max={3}
-              step={0.1}
-              value={objective.weight}
-              onChange={(e) => updateWeight(parseFloat(e.target.value))}
-            />
-          </div>
 
-          <div>
-            <div className="row between" style={{ marginBottom: '10px' }}>
-              <div>
+            <div className="editable-row">
+              <label className="field">
+                Strategic context
+                <span className="editable-hint">click to edit</span>
+              </label>
+              <EditableInput
+                value={objective.description}
+                onChange={(v) => onUpdate({ description: v })}
+                placeholder="1–2 sentences explaining why this objective matters this year"
+                multiline
+              />
+            </div>
+
+            <div>
+              <div className="row between" style={{ marginBottom: '6px' }}>
                 <label className="field" style={{ marginBottom: 0 }}>
-                  Key results
+                  Budget weight
+                  <HelpIcon definition={DEFINITIONS.weight.short} />
                 </label>
-                <div className="tiny muted" style={{ marginTop: '2px' }}>
-                  {krs.length} of {KR_HARD_CAP} (Grove discipline — keep to 2–5)
-                </div>
+                <span className="okr-weight-pill">{Number(objective.weight).toFixed(1)}×</span>
               </div>
-              <button
-                className="btn sm"
-                onClick={addKR}
-                disabled={krCapReached}
-                title={
-                  krCapReached
-                    ? 'Hard cap reached. Grove recommended ≤5 KRs per objective.'
-                    : 'Add a key result'
-                }
-              >
-                + Add key result
+              <input
+                type="range"
+                min={0}
+                max={3}
+                step={0.1}
+                value={objective.weight}
+                onChange={(e) => updateWeight(parseFloat(e.target.value))}
+              />
+            </div>
+
+            <div>
+              <div className="row between" style={{ marginBottom: '10px' }}>
+                <div>
+                  <label className="field" style={{ marginBottom: 0 }}>Key results</label>
+                  <div className="tiny muted" style={{ marginTop: '2px' }}>
+                    {krs.length} of {KR_HARD_CAP} (Grove discipline — keep to 2–5)
+                  </div>
+                </div>
+                <button
+                  className="btn sm"
+                  onClick={addKR}
+                  disabled={krCapReached}
+                  title={
+                    krCapReached
+                      ? 'Hard cap reached. Grove recommended ≤5 KRs per objective.'
+                      : 'Add a key result'
+                  }
+                >
+                  + Add key result
+                </button>
+              </div>
+
+              {krs.length === 0 ? (
+                <div
+                  className="tiny muted"
+                  style={{
+                    padding: '14px',
+                    border: '1px dashed var(--border)',
+                    textAlign: 'center',
+                    background: 'white',
+                  }}
+                >
+                  No key results yet. An objective without measurable KRs is just an aspiration.
+                </div>
+              ) : (
+                krs.map((kr) => (
+                  <KeyResultRow
+                    key={kr.id}
+                    kr={kr}
+                    onUpdate={(changes) => updateKR(kr.id, changes)}
+                    onRemove={() => removeKR(kr.id)}
+                  />
+                ))
+              )}
+            </div>
+
+            <div className="row" style={{ justifyContent: 'flex-end', borderTop: '1px solid var(--border)', paddingTop: '12px' }}>
+              <button className="btn sm danger" onClick={() => setConfirmDelete(true)}>
+                Remove objective
               </button>
             </div>
-
-            {krs.length === 0 ? (
-              <div
-                className="tiny muted"
-                style={{
-                  padding: '14px',
-                  border: '1px dashed var(--border)',
-                  textAlign: 'center',
-                }}
-              >
-                No key results yet. An objective without measurable KRs is just an aspiration.
-              </div>
-            ) : (
-              krs.map((kr) => (
-                <KeyResultRow
-                  key={kr.id}
-                  objectiveId={objective.id}
-                  kr={kr}
-                  onUpdate={(changes) => updateKR(kr.id, changes)}
-                  onRemove={() => removeKR(kr.id)}
-                />
-              ))
-            )}
           </div>
         </div>
-      </div>
+      )}
 
       {confirmDelete && (
         <Modal
@@ -299,9 +321,7 @@ function ObjectiveCard({ objective, index, onUpdate, onRemove, log }) {
           onClose={() => setConfirmDelete(false)}
           footer={
             <>
-              <button className="btn ghost" onClick={() => setConfirmDelete(false)}>
-                Cancel
-              </button>
+              <button className="btn ghost" onClick={() => setConfirmDelete(false)}>Cancel</button>
               <button
                 className="btn accent"
                 onClick={() => {
@@ -315,7 +335,7 @@ function ObjectiveCard({ objective, index, onUpdate, onRemove, log }) {
           }
         >
           <p style={{ fontSize: '14px', color: 'var(--ink-2)', lineHeight: 1.6 }}>
-            This will permanently delete <strong>{objective.name}</strong> and all of its key
+            This will permanently delete <strong>{objective.name || 'this objective'}</strong> and all of its key
             results. Any campaigns currently tagged to this objective will need to be retagged.
           </p>
           <p style={{ fontSize: '14px', color: 'var(--ink-2)', marginTop: '12px' }}>
@@ -352,68 +372,53 @@ function BusinessPriorityCard({ priority, index, onUpdate, onRemove, log }) {
       style={{
         border: '1px solid var(--border)',
         background: 'var(--surface)',
-        padding: '16px 18px',
+        padding: '14px 16px',
         marginBottom: '12px',
         borderLeft: '3px solid var(--accent)',
       }}
     >
-      <div className="row between" style={{ marginBottom: '10px' }}>
-        <div className="row gap-md" style={{ flex: 1 }}>
-          <div
-            style={{
-              fontFamily: 'var(--font-sans)',
-              fontVariantNumeric: 'tabular-nums',
-              fontSize: '18px',
-              fontWeight: 300,
-              color: 'var(--accent)',
-              minWidth: '24px',
-            }}
-          >
+      <div className="row between" style={{ marginBottom: '10px', alignItems: 'flex-start' }}>
+        <div className="row gap-md" style={{ flex: 1, alignItems: 'baseline' }}>
+          <div className="okr-number" style={{ fontSize: '16px' }}>
             {String(index + 1).padStart(2, '0')}
           </div>
-          <input
-            type="text"
-            value={priority.name}
-            onChange={(e) => onUpdate({ name: e.target.value })}
-            className="input"
-            style={{
-              fontWeight: 500,
-              fontSize: '14px',
-              border: 'none',
-              background: 'transparent',
-              padding: '4px 0',
-              flex: 1,
-            }}
-            placeholder="Priority name"
-          />
+          <div style={{ flex: 1 }} className="editable-row">
+            <EditableInput
+              value={priority.name}
+              onChange={(v) => onUpdate({ name: v })}
+              placeholder="Priority name"
+              style={{ fontWeight: 500, fontSize: 'var(--text-base)' }}
+            />
+          </div>
         </div>
-        <button className="btn sm ghost" onClick={() => setConfirmDelete(true)} aria-label="Remove">
+        <button
+          className="btn icon-only ghost"
+          onClick={() => setConfirmDelete(true)}
+          aria-label="Remove"
+          title="Remove priority"
+        >
           ×
         </button>
       </div>
 
       <div className="col gap-md">
-        <div>
-          <label className="field">Description</label>
-          <textarea
-            className="textarea"
-            value={priority.description || ''}
-            onChange={(e) => onUpdate({ description: e.target.value })}
+        <div className="editable-row">
+          <label className="field">
+            Description
+            <span className="editable-hint">click to edit</span>
+          </label>
+          <EditableInput
+            value={priority.description}
+            onChange={(v) => onUpdate({ description: v })}
             placeholder="1–2 sentences describing this priority and why it exists"
-            rows={2}
-            style={{ resize: 'vertical', minHeight: '45px' }}
+            multiline
           />
         </div>
 
         <div>
           <div className="row between" style={{ marginBottom: '6px' }}>
             <label className="field" style={{ marginBottom: 0 }}>Budget weight</label>
-            <span
-              className="mono"
-              style={{ fontSize: '13px', fontWeight: 500, color: 'var(--accent)' }}
-            >
-              {Number(priority.weight).toFixed(1)}×
-            </span>
+            <span className="okr-weight-pill">{Number(priority.weight).toFixed(1)}×</span>
           </div>
           <input
             type="range"
@@ -446,7 +451,7 @@ function BusinessPriorityCard({ priority, index, onUpdate, onRemove, log }) {
           }
         >
           <p style={{ fontSize: '14px', color: 'var(--ink-2)', lineHeight: 1.6 }}>
-            This will delete <strong>{priority.name}</strong>. Campaigns tagged to it will need to be
+            This will delete <strong>{priority.name || 'this priority'}</strong>. Campaigns tagged to it will need to be
             retagged.
           </p>
         </Modal>
@@ -456,7 +461,7 @@ function BusinessPriorityCard({ priority, index, onUpdate, onRemove, log }) {
 }
 
 /* ============================================================
-   Main component
+   Main component — two-column layout
    ============================================================ */
 export function ObjectivesAndPriorities() {
   const { data, dispatch, log } = useData();
@@ -467,7 +472,6 @@ export function ObjectivesAndPriorities() {
   const objectivesAtCap = objectives.length >= OBJECTIVES_HARD_CAP;
   const objectivesAtRecommended = objectives.length >= OBJECTIVES_DEFAULT;
   const prioritiesAtCap = priorities.length >= PRIORITIES_HARD_CAP;
-  const prioritiesAtRecommended = priorities.length >= PRIORITIES_DEFAULT;
 
   const addObjective = () => {
     if (objectivesAtCap) return;
@@ -530,109 +534,94 @@ export function ObjectivesAndPriorities() {
         allocation. Marketing objectives use the Grove OKR framework — qualitative direction with
         2–5 measurable key results. Business priorities reflect which BUs and verticals are funded.
         Weights set here flow directly into how campaigns get budget. Changes are logged and should
-        be senior-team decisions, not day-to-day adjustments.
+        be senior-team decisions, not day-to-day adjustments. Click any objective to expand its
+        details. Edits save automatically as you type.
       </InfoPanel>
 
-      {/* OKRs */}
-      <div className="row between" style={{ marginBottom: '14px', alignItems: 'baseline' }}>
-        <h2 style={{ fontSize: '22px', fontWeight: 500, letterSpacing: '-0.01em' }}>
-          Marketing objectives
-          <span
-            className="muted"
-            style={{ fontSize: '13px', fontWeight: 400, marginLeft: '12px' }}
-          >
-            {objectives.length} of {OBJECTIVES_DEFAULT} recommended
-            {objectivesAtCap && ' (cap reached)'}
-          </span>
-        </h2>
-        <button
-          className="btn primary"
-          onClick={addObjective}
-          disabled={objectivesAtCap}
-          title={
-            objectivesAtCap
-              ? 'Hard cap of 10 reached'
-              : objectivesAtRecommended
-                ? 'Above recommended count of 5 — add only if essential'
-                : 'Add objective'
-          }
-        >
-          + Add objective
-        </button>
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.3fr) minmax(0, 1fr)', gap: '24px', alignItems: 'flex-start' }}>
+        {/* Left column: Marketing objectives */}
+        <div>
+          <div className="row between" style={{ marginBottom: '14px', alignItems: 'baseline' }}>
+            <h2 style={{ fontSize: '20px', fontWeight: 500, letterSpacing: '-0.01em' }}>
+              Marketing objectives
+              <span className="muted" style={{ fontSize: '12px', fontWeight: 400, marginLeft: '10px' }}>
+                {objectives.length} of {OBJECTIVES_DEFAULT} recommended
+                {objectivesAtCap && ' (cap reached)'}
+              </span>
+            </h2>
+            <button
+              className="btn primary sm"
+              onClick={addObjective}
+              disabled={objectivesAtCap}
+              title={objectivesAtCap ? 'Hard cap of 10 reached' : 'Add objective'}
+            >
+              + Add objective
+            </button>
+          </div>
+
+          {objectivesAtRecommended && !objectivesAtCap && (
+            <div className="info-panel" style={{ marginBottom: '14px', fontSize: '12px' }}>
+              You've reached the recommended count of {OBJECTIVES_DEFAULT}. Adding more is allowed up
+              to {OBJECTIVES_HARD_CAP}, but Grove's discipline favors fewer, sharper objectives.
+            </div>
+          )}
+
+          {objectives.length === 0 ? (
+            <div className="muted tiny" style={{ padding: '20px', textAlign: 'center', border: '1px dashed var(--border)' }}>
+              No objectives yet. Click "Add objective" to begin.
+            </div>
+          ) : (
+            objectives.map((o, i) => (
+              <ObjectiveCard
+                key={o.id}
+                objective={o}
+                index={i}
+                onUpdate={(changes) => updateObjective(o.id, changes)}
+                onRemove={() => removeObjective(o.id, o.name)}
+                log={log}
+              />
+            ))
+          )}
+        </div>
+
+        {/* Right column: Business priorities */}
+        <div>
+          <div className="row between" style={{ marginBottom: '14px', alignItems: 'baseline' }}>
+            <h2 style={{ fontSize: '20px', fontWeight: 500, letterSpacing: '-0.01em' }}>
+              Business priorities
+              <span className="muted" style={{ fontSize: '12px', fontWeight: 400, marginLeft: '10px' }}>
+                {priorities.length} of {PRIORITIES_DEFAULT} rec.
+                {prioritiesAtCap && ' (cap)'}
+              </span>
+            </h2>
+            <button
+              className="btn primary sm"
+              onClick={addPriority}
+              disabled={prioritiesAtCap}
+              title={prioritiesAtCap ? 'Hard cap of 10 reached' : 'Add priority'}
+            >
+              + Add priority
+            </button>
+          </div>
+
+          {priorities.length === 0 ? (
+            <div className="muted tiny" style={{ padding: '20px', textAlign: 'center', border: '1px dashed var(--border)' }}>
+              No business priorities yet. Click "Add priority" to begin.
+            </div>
+          ) : (
+            priorities.map((p, i) => (
+              <BusinessPriorityCard
+                key={p.id}
+                priority={p}
+                index={i}
+                onUpdate={(changes) => updatePriority(p.id, changes)}
+                onRemove={() => removePriority(p.id, p.name)}
+                log={log}
+              />
+            ))
+          )}
+        </div>
       </div>
-
-      {objectivesAtRecommended && !objectivesAtCap && (
-        <div className="info-panel" style={{ marginBottom: '14px' }}>
-          You've reached the recommended count of {OBJECTIVES_DEFAULT} objectives. Adding more is
-          allowed up to {OBJECTIVES_HARD_CAP}, but Grove's discipline favors fewer, sharper
-          objectives.
-        </div>
-      )}
-
-      {objectives.length === 0 ? (
-        <div
-          className="muted tiny"
-          style={{ padding: '24px', textAlign: 'center', border: '1px dashed var(--border)' }}
-        >
-          No objectives yet. Click "Add objective" to begin.
-        </div>
-      ) : (
-        objectives.map((o, i) => (
-          <ObjectiveCard
-            key={o.id}
-            objective={o}
-            index={i}
-            onUpdate={(changes) => updateObjective(o.id, changes)}
-            onRemove={() => removeObjective(o.id, o.name)}
-            log={log}
-          />
-        ))
-      )}
-
-      {/* Business priorities */}
-      <div
-        className="row between"
-        style={{ marginTop: '40px', marginBottom: '14px', alignItems: 'baseline' }}
-      >
-        <h2 style={{ fontSize: '22px', fontWeight: 500, letterSpacing: '-0.01em' }}>
-          Business priorities
-          <span
-            className="muted"
-            style={{ fontSize: '13px', fontWeight: 400, marginLeft: '12px' }}
-          >
-            {priorities.length} of {PRIORITIES_DEFAULT} recommended
-            {prioritiesAtCap && ' (cap reached)'}
-          </span>
-        </h2>
-        <button
-          className="btn primary"
-          onClick={addPriority}
-          disabled={prioritiesAtCap}
-          title={prioritiesAtCap ? 'Hard cap of 10 reached' : 'Add priority'}
-        >
-          + Add priority
-        </button>
-      </div>
-
-      {priorities.length === 0 ? (
-        <div
-          className="muted tiny"
-          style={{ padding: '24px', textAlign: 'center', border: '1px dashed var(--border)' }}
-        >
-          No business priorities yet. Click "Add priority" to begin.
-        </div>
-      ) : (
-        priorities.map((p, i) => (
-          <BusinessPriorityCard
-            key={p.id}
-            priority={p}
-            index={i}
-            onUpdate={(changes) => updatePriority(p.id, changes)}
-            onRemove={() => removePriority(p.id, p.name)}
-            log={log}
-          />
-        ))
-      )}
     </>
   );
 }

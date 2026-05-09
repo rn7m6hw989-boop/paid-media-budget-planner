@@ -788,3 +788,139 @@ input[type="range"]::-moz-range-thumb {
   color: var(--ink-3);
   margin-top: 8px;
 }
+
+/* ==========================================================================
+   Inline editable affordances — make "click to edit" obvious on hover
+   ========================================================================== */
+
+.editable-text {
+  border: 1px solid transparent;
+  background: transparent;
+  border-radius: var(--r-sm);
+  transition: all 0.12s;
+  cursor: text;
+  padding: 6px 10px;
+}
+
+.editable-text:hover {
+  border-color: var(--border);
+  background: var(--surface-2);
+}
+
+.editable-text:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: white;
+}
+
+.editable-text::placeholder {
+  color: var(--ink-4);
+}
+
+/* Editable area when expanded shows pencil hint */
+.editable-hint {
+  display: inline-block;
+  font-size: 10px;
+  color: var(--ink-4);
+  margin-left: 6px;
+  opacity: 0;
+  transition: opacity 0.12s;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.editable-row:hover .editable-hint {
+  opacity: 1;
+}
+
+/* Collapsible objective summary row */
+.collapse-toggle {
+  background: transparent;
+  border: none;
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-3);
+  cursor: pointer;
+  border-radius: var(--r-sm);
+  font-size: 11px;
+  transition: all 0.12s;
+}
+
+.collapse-toggle:hover { background: var(--surface-2); color: var(--ink); }
+
+.collapse-icon {
+  display: inline-block;
+  transition: transform 0.15s;
+  font-family: var(--font-sans);
+  font-weight: 500;
+}
+
+.collapse-icon.open { transform: rotate(90deg); }
+
+/* OKR/priority card adjustments for narrower columns */
+.okr-card {
+  background: white;
+  border: 1px solid var(--border);
+  margin-bottom: 12px;
+  transition: border-color 0.12s;
+}
+
+.okr-card:hover { border-color: var(--border-strong); }
+
+.okr-card.expanded { border-color: var(--ink-3); }
+
+.okr-summary {
+  display: grid;
+  grid-template-columns: 32px 1fr auto auto;
+  gap: 12px;
+  align-items: center;
+  padding: 14px 16px;
+  cursor: pointer;
+  border-left: 3px solid var(--accent);
+  transition: background 0.12s;
+}
+
+.okr-summary:hover { background: var(--surface-2); }
+
+.okr-number {
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
+  font-size: 18px;
+  font-weight: 300;
+  color: var(--accent);
+  letter-spacing: -0.02em;
+}
+
+.okr-name {
+  font-size: var(--text-base);
+  font-weight: 500;
+  color: var(--ink);
+  line-height: 1.4;
+}
+
+.okr-weight-pill {
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--accent);
+  background: var(--accent-soft);
+  padding: 3px 10px;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+
+.okr-kr-count {
+  font-size: var(--text-xs);
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
+.okr-body {
+  border-top: 1px solid var(--border);
+  padding: 16px;
+  background: var(--surface-2);
+}
