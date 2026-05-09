@@ -164,6 +164,42 @@ function reducer(state, action) {
         }),
       };
 
+    case 'ADD_REGION': {
+      // Build a default scores object from current rubric factors (defaulting each to 3)
+      const commercialDefaults = {};
+      for (const f of state.rubrics.commercial.factors) commercialDefaults[f.id] = 3;
+      const brandDefaults = {};
+      for (const f of state.rubrics.brand.factors) brandDefaults[f.id] = 3;
+
+      return {
+        ...state,
+        regions: [
+          ...state.regions,
+          {
+            id: uid('reg'),
+            name: action.name || 'New region',
+            commercial: commercialDefaults,
+            brand: brandDefaults,
+            ...action.changes,
+          },
+        ],
+      };
+    }
+
+    case 'UPDATE_REGION_NAME':
+      return {
+        ...state,
+        regions: state.regions.map((r) =>
+          r.id === action.id ? { ...r, name: action.name } : r
+        ),
+      };
+
+    case 'REMOVE_REGION':
+      return {
+        ...state,
+        regions: state.regions.filter((r) => r.id !== action.id),
+      };
+
     case 'UPDATE_FACTOR_WEIGHT':
       return {
         ...state,
