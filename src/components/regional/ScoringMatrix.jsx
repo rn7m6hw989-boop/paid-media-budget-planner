@@ -211,9 +211,9 @@ export function ScoringMatrix({
                     <FactorPopover factor={f}>
                       <span
                         style={{
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.08em',
-                          fontSize: '10px',
+                          textTransform: 'none',
+                          letterSpacing: '-0.005em',
+                          fontSize: '11px',
                         }}
                       >
                         {f.name}

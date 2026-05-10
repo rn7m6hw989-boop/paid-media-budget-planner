@@ -8,15 +8,17 @@ import {
 } from '../lib/calculations.js';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
 
+// Chart palette: Science Blue accent leads, then maturity-grayscale gradient
+// matching the strategic label progression. Quiet, analytical, no candy.
 const CHART_COLORS = [
-  '#CC0000', // TI red
-  '#1A1A1A', // near-black
-  '#666666', // mid gray
-  '#999999', // light gray
-  '#A30000', // dark red
-  '#4A4A4A', // dark gray
-  '#E50914', // bright red
-  '#BDBDBD', // pale gray
+  '#0251D6', // Science Blue (brand)
+  '#1F2937', // dark slate (Defend equivalent)
+  '#475569', // mid slate
+  '#64748B', // mid-light slate
+  '#94A3B8', // light slate (Maintain equivalent)
+  '#CBD5E1', // pale slate
+  '#E2E8F0', // very light slate (Build equivalent)
+  '#F1F5F9', // almost white
 ];
 
 function ChartTile({ title, children }) {
@@ -106,7 +108,7 @@ export function Breakdowns() {
             <div className="col gap-sm">
               {breakdowns.byPool.map((p, i) => {
                 const pct = total > 0 ? (p.value / total) * 100 : 0;
-                const color = p.id === 'brand' ? '#CC0000' : '#666666';
+                const color = p.id === 'brand' ? '#0251D6' : '#475569';
                 return (
                   <div key={p.id}>
                     <div className="row between tiny" style={{ marginBottom: '3px' }}>

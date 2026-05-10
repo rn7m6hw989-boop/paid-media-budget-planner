@@ -196,7 +196,7 @@ export function HardCommitments() {
                 </div>
                 <div className="cm-amount">{formatCurrencyFull(c.amount)}</div>
                 <button className="btn icon-only ghost" onClick={() => setEditing(c)} aria-label="Edit">✎</button>
-                <Tag variant="warn">🔒 Locked</Tag>
+                <Tag>🔒 Locked</Tag>
               </div>
             );
           })

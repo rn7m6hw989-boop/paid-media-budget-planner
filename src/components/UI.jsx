@@ -142,25 +142,22 @@ export function SumValidator({ total, label = 'Total' }) {
   const off = total - 100;
   return (
     <div
-      className={`sum-validator ${ok ? 'ok' : 'off'}`}
-      style={{
-        background: ok ? 'var(--success-soft)' : 'var(--accent-soft)',
-        border: `1px solid ${ok ? 'transparent' : 'var(--accent)'}`,
-        borderLeft: `3px solid ${ok ? 'var(--success)' : 'var(--accent)'}`,
-        padding: '8px 12px',
-        marginBottom: '12px',
-        fontSize: 'var(--text-sm)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        gap: '12px',
-      }}
+      className={`validator ${ok ? '' : 'warn'}`}
+      style={{ marginBottom: '12px' }}
     >
-      <span style={{ color: ok ? 'var(--success-ink)' : 'var(--accent-ink)' }}>
+      <span
+        className="dot"
+        style={{ background: ok ? 'var(--success)' : 'var(--warn)' }}
+      />
+      <span>
         {ok ? (
-          <>{label}: <strong>100%</strong> — sums correctly.</>
+          <>
+            <strong>{label}: 100%</strong> — sums correctly
+          </>
         ) : (
-          <>{label} sums to <strong>{total}%</strong>. {off > 0 ? `${off}% over` : `${Math.abs(off)}% under`}.</>
+          <>
+            <strong>{label} sums to {total}%</strong> — {off > 0 ? `${off}% over` : `${Math.abs(off)}% under`}
+          </>
         )}
       </span>
     </div>

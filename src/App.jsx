@@ -56,19 +56,19 @@ export default function App() {
             <span className="brand-mark">Paid Media Budget Planner</span>
             <span className="brand-sub">FY 2026</span>
           </div>
+          <nav className="tabs">
+            {TABS.map((t) => (
+              <button
+                key={t.id}
+                className={`tab ${tab === t.id ? 'active' : ''}`}
+                onClick={() => setTab(t.id)}
+              >
+                {t.label}
+              </button>
+            ))}
+          </nav>
+          <div className="app-header-trailing">Auto-saved</div>
         </header>
-
-        <nav className="tabs">
-          {TABS.map((t) => (
-            <button
-              key={t.id}
-              className={`tab ${tab === t.id ? 'active' : ''}`}
-              onClick={() => setTab(t.id)}
-            >
-              {t.label}
-            </button>
-          ))}
-        </nav>
 
         <main className="app-body">
           {tab === 'budget' && <BudgetAllocation />}

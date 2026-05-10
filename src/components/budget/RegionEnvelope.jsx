@@ -26,7 +26,7 @@ function CampaignRow({ campaign, allocation, onEdit, onAdjust, onToggleLock }) {
             {campaign.name}
           </div>
           <div className="row gap-sm" style={{ flexWrap: 'wrap' }}>
-            {locked && <Tag variant="warn">🔒 Locked</Tag>}
+            {locked && <Tag>🔒 Locked</Tag>}
             {!locked && adjusted && <Tag variant="danger">Manual</Tag>}
           </div>
         </div>
@@ -85,35 +85,34 @@ function PoolGroup({
   const empty = totalCampaigns === 0;
 
   return (
-    <div style={{ background: 'white', border: '1px solid var(--border)', marginBottom: '12px' }}>
+    <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r-md)', marginBottom: '12px', overflow: 'hidden' }}>
       <div
         style={{
           padding: '12px 16px',
           background: 'var(--surface-2)',
           borderBottom: empty ? 'none' : '1px solid var(--border)',
-          borderLeft: `3px solid ${pool === 'brand' ? 'var(--accent)' : '#666'}`,
         }}
       >
         <div className="row between" style={{ alignItems: 'flex-start' }}>
           <div>
             <div
               style={{
-                fontSize: '10px',
+                fontSize: '11px',
                 fontWeight: 500,
-                color: pool === 'brand' ? 'var(--accent)' : 'var(--ink-3)',
-                textTransform: 'uppercase',
-                letterSpacing: '0.1em',
-                marginBottom: '2px',
+                color: 'var(--ink-3)',
+                textTransform: 'none',
+                letterSpacing: '-0.005em',
+                marginBottom: '3px',
               }}
             >
-              {pool} pool
+              {pool === 'brand' ? 'Brand pool' : 'Demand pool'}
             </div>
             <div className="row gap-md" style={{ alignItems: 'baseline' }}>
               <span
                 className="mono"
                 style={{
-                  fontSize: '20px',
-                  fontWeight: 300,
+                  fontSize: '18px',
+                  fontWeight: 600,
                   color: 'var(--ink)',
                   letterSpacing: '-0.02em',
                 }}
@@ -126,7 +125,7 @@ function PoolGroup({
               {!empty && Math.abs(stranded) > 1 && (
                 <span
                   className="tiny"
-                  style={{ color: overAllocated ? 'var(--accent)' : 'var(--ink-3)' }}
+                  style={{ color: overAllocated ? 'var(--danger)' : 'var(--ink-3)' }}
                 >
                   {overAllocated
                     ? `${formatCurrencyFull(Math.abs(stranded))} OVER-ALLOCATED`
